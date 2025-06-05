@@ -1,9 +1,10 @@
-from utils import CreateCOAssessedEvent
-from utils import CreatePredicateAssessedEvent
-from utils import CreatePredicateFailedEvent, CreatePredicateSucceededEvent
-from utils import DeploymentStream, Application, Environment
+from predicates import CreatePredicateFailedEvent, CreatePredicateSucceededEvent
+from utils import DeploymentStream
 from utils import CcmClient
 from esdbclient import StreamState
+from applications import App
+from environments import Env
+from controlobjectives import ControlObjectiveDomain
 
 #evidence = "some data"
 #print(CreateCOAssessedEvent(False, "CCV", 2, evidence))
@@ -11,10 +12,10 @@ from esdbclient import StreamState
 
 #print(DeploymentStream(Application.Payroll, Environment.DEV))
 
-predicateFailedEvent = CreatePredicateFailedEvent("CCV", 1, 1, 12, "Expired Certificate")
+predicateFailedEvent = CreatePredicateFailedEvent(ControlObjectiveDomain.ConfidentialComputingVerifier, 1, 1, 12, "Expired Certificate")
 predicateSucceededEvent = CreatePredicateSucceededEvent("RP", 2, 2)
 
-PayrollDeploymentStream = DeploymentStream(Application.Payroll, Environment.DEV)
+PayrollDeploymentStream = DeploymentStream(App.Payroll, Env.DEV)
 client = CcmClient()
 client.append_to_stream(
     PayrollDeploymentStream,
