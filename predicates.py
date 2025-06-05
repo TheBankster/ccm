@@ -3,14 +3,12 @@ from esdbclient import NewEvent
 from enum import Enum
 from controlprocedures import ControlProcedureIdentifier
 from controlobjectives import ControlObjectiveDomain
+from eventtypes import PredicateSucceeded, PredicateFailed
+from controlobjectives import VerifierControlObjectives, ReverseProxyControlObjectives
 
 #
 # Predicate Helpers
 #
-
-# Predicate Event Types
-PredicateSucceeded = "PredicateSucceeded"
-PredicateFailed = "PredicateFailed"
 
 def PredicateIdentifier(CODomain: str, COID: int, PredicateID: int) -> str:
     return CODomain + "-" + str(COID) + "-" + str(PredicateID)
@@ -24,18 +22,18 @@ def CreatePredicateAssessedEvent(success: bool, domain: ControlObjectiveDomain, 
         type = PredicateSucceeded if success else PredicateFailed,
         data = dataString.encode('utf-8'))
 
-FailedCP = "FailedControlProcedure"
+FailedControlProcedure = "FailedControlProcedure"
 
 def CreatePredicateSucceededEvent(domain: ControlObjectiveDomain, coId: int, predicateId: int, reason: str = "") -> NewEvent:
     return CreatePredicateAssessedEvent(True, domain, coId, predicateId)
 
 def ReasonForControlProcedureFailure(cpId: int, reason: str) -> str:
     return \
-        "{\"" + FailedCP + "\":\"" + ControlProcedureIdentifier(cpId) + "\"," + \
+        "{\"" + FailedControlProcedure + "\":\"" + ControlProcedureIdentifier(cpId) + "\"," + \
         "\"Reason\":\"" + reason + "\"}"
 
-def CreatePredicateFailedEvent(domain: ControlObjectiveDomain, coId: int, predicateId: int, cpId: int, reason: str) -> NewEvent:
-    return CreatePredicateAssessedEvent(False, domain, coId, predicateId, ReasonForControlProcedureFailure(cpId, reason))
+def CreatePredicateFailedEvent(coDomain: ControlObjectiveDomain, coId: int, predicateId: int, cpId: int, reason: str) -> NewEvent:
+    return CreatePredicateAssessedEvent(False, coDomain, coId, predicateId, ReasonForControlProcedureFailure(cpId, reason))
 
 class Mode(Enum):
     SaaS = 0
@@ -43,19 +41,23 @@ class Mode(Enum):
     RollYourOwn = 2
 
 class Predicate:
-    ControlObjectiveId: str
+    coDomain: ControlObjectiveDomain
+    coId: int
     ControlProcedures = []
-    def __init__(self, mode: Mode, cpsArray):
-        self.ControlProcedures = cpsArray
+    def __init__(self, coDomain: ControlObjectiveDomain, coId: int, cpArray):
+        self.coDomain = coDomain
+        self.coId = coId
+        self.ControlProcedures = cpArray
 
-    def HandlePredicateFailure(self):
-        raise NotImplementedError("Predicate is an abstract class")
+    def HandlePredicateFailure(self, cpId: int, reason: str):
+        CreatePredicateFailedEvent(self.coDomain, self.coId, cpId, reason)
+
+
+VerifierTrustworthinessModeToCPMapping = [\
+    [1],    # SaaS
+    [2, 3], # Firmwide
+    [2, 3]] # Roll Your Own
 
 class VerifierPredicate_1_1_1(Predicate):
-    
     def __init__(self, mode: Mode):
-        ModeToCPMapping = [\
-            ["CP-1"], # SaaS
-            ["CP-2", "CP-3"], # Firmwide
-            ["CP-2", "CP-3"]] # Roll Your Own
-        Predicate.__init__(mode, ModeToCPMapping[mode])
+        Predicate.__init__(self, ControlObjectiveDomain.ConfidentialComputingVerifier, VerifierControlObjectives.VerifierTrustworthiness, VerifierTrustworthinessModeToCPMapping[mode])
