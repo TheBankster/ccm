@@ -17,3 +17,5 @@ def CcmClient(host = DefaultHost, port = DefaultPort):
 
 def DeploymentStream(app: App, env: Env) -> str:
     return app.name + "-" + str(app.value) + "-" + env.name
+
+GlobalClient = CcmClient()

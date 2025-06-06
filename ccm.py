@@ -1,9 +1,7 @@
 # Continuous Control Monitoring Main Loop
 
-from utils import CcmClient
+from utils import GlobalClient
 from eventtypes import ControlObjectiveFailed, ControlObjectiveAchieved, PredicateSucceeded, PredicateFailed
-
-client = CcmClient()
 
 def HandleControlObjectiveFailedEvent(data: str):
     print(data)
@@ -21,7 +19,7 @@ def HandlePredicateFailedEvent(data: str):
     print(data)
     return
 
-with client.subscribe_to_all() as subscription:
+with GlobalClient.subscribe_to_all() as subscription:
     for event in subscription:
         print("Encountered event: " + event.type + " " + event.data.decode())
         if event.type == ControlObjectiveFailed:
