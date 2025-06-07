@@ -46,7 +46,7 @@ class ControlProcedureState:
     def CpId(self) -> int:
         return self.__cpId
     
-    # Returns 'True' if hypotheticalState is valid when compared with the expected state
+    # Returns 'True' if 'actual' state is valid when compared with the 'expected' state
     # Implement in each derived class
     def Validate(self, actual: ControlProcedureState) -> ControlProcedureAssessmentResult:
         raise NotImplementedError("Implement Validate() method")
@@ -64,12 +64,12 @@ class SampleControlProcedureState(ControlProcedureState):
         ControlProcedureState.__init__(self, cpId)
         self.expectedState = expectedState
 
-    def Validate(self, hypotheticalState: SampleControlProcedureState) -> ControlProcedureAssessmentResult:
-        if self.CpId() != hypotheticalState.CpId():
-            raise ValueError("cpId mismatch: " + self.CpId() + " vs " + hypotheticalState.CpId())
+    def Validate(self, state: SampleControlProcedureState) -> ControlProcedureAssessmentResult:
+        if self.CpId() != state.CpId():
+            raise ValueError("cpId mismatch: " + self.CpId() + " vs " + state.CpId())
         return ControlProcedureAssessmentResult(
-            success = (self.expectedState == hypotheticalState.expectedState),
-            evidence = "Expected " + str(self.expectedState) + " Received " + str(hypotheticalState.expectedState))
+            success = (self.expectedState == state.expectedState),
+            evidence = "Expected " + str(self.expectedState) + " Received " + str(state.expectedState))
 
 class ControlProcedure:
     __cpId: int
@@ -90,7 +90,7 @@ class ControlProcedure:
 
     def __AppendControlProcedureCompletionEvent(self, assessmentResult: ControlProcedureAssessmentResult):
         dataString = \
-            "{\"ControlProcedureID\": " + self.__cpId + "," + \
+            "{\"ControlProcedureID\": " + str(self.__cpId) + "," + \
             "\"Owner\": \"" + self.__owner + "\"," + \
             "\"Success\": \"" + str(assessmentResult.success) + "\"," + \
             "\"Evidence\":" + assessmentResult.evidence + "}"
@@ -101,11 +101,11 @@ class ControlProcedure:
                 data = dataString.encode('utf-8')),
             current_version=StreamState.ANY)
     
-    def AssessControlProcedureState(self, hypotheticalState: ControlProcedureState) -> ControlProcedureAssessmentResult:
-        return self.__expectedState.Validate(hypotheticalState)
+    def AssessControlProcedureState(self, assessedState: ControlProcedureState) -> ControlProcedureAssessmentResult:
+        return self.__expectedState.Validate(assessedState)
     
-    def ReportControlProcedureState(self, currentState: ControlProcedureState):
-        self.__AppendControlProcedureCompletionEvent(self.AssessControlProcedureState(currentState))
+    def ReportControlProcedureState(self, reportedState: ControlProcedureState):
+        self.__AppendControlProcedureCompletionEvent(self.AssessControlProcedureState(reportedState))
 
 class ContractualAgreementWithCSP(ControlProcedure):
     def __init__(self, stream: str, owner: str):

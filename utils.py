@@ -19,3 +19,6 @@ def DeploymentStream(app: App, env: Env) -> str:
     return app.name + "-" + str(app.value) + "-" + env.name
 
 GlobalClient = CcmClient()
+
+PayrollDevStream = DeploymentStream(App.Payroll, Env.DEV)
+TimecardProdStream = DeploymentStream(App.Timecard, Env.PROD)

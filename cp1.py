@@ -25,22 +25,22 @@ class CSPState(ControlProcedureState):
         dictionary = {"csp": self.Csp(), "soc3": self.Soc3Passed()}
         return json.dumps(self, default=lambda o: dictionary)
 
-    def Validate(self, actual: CSPState) -> ControlProcedureAssessmentResult:
-        if self.CpId() != actual.CpId():
-            raise ValueError("cpId mismatch: " + self.CpId() + " vs " + actual.CpId())
+    def Validate(self, state: CSPState) -> ControlProcedureAssessmentResult:
+        if self.CpId() != state.CpId():
+            raise ValueError("cpId mismatch: " + self.CpId() + " vs " + state.CpId())
         success = \
-            (self.Csp() == actual.Csp()) and \
-            actual.Soc3Passed()
-        evidence = EvidenceFromState(self, actual)
+            (self.Csp() == state.Csp()) and \
+            state.Soc3Passed()
+        evidence = EvidenceFromState(self, state)
 
         return ControlProcedureAssessmentResult(success, evidence)
 
 class ContractualAgreementWithCSP(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, ControlProcedureId, stream, owner, CSPState("Azure"))
+    def __init__(self, stream: str, owner: str, state: CSPState):
+        ControlProcedure.__init__(self, ControlProcedureId, stream, owner, state)
 
-test1 = CSPState("Azure")
-test2 = CSPState("Azure", False)
-result = test1.Validate(test2)
-print(result.success)
-print(result.evidence)
+#test1 = CSPState("Azure")
+#test2 = CSPState("Azure", False)
+#result = test1.Validate(test2)
+#print(result.success)
+#print(result.evidence)
