@@ -30,7 +30,7 @@ class CSPState(ControlProcedureState):
             raise ValueError("cpId mismatch: " + self.CpId() + " vs " + state.CpId())
         success = \
             (self.Csp() == state.Csp()) and \
-            state.Soc3Passed()
+            (not self.Soc3Passed() or state.Soc3Passed())
         evidence = EvidenceFromState(self, state)
 
         return ControlProcedureAssessmentResult(success, evidence)
@@ -39,8 +39,3 @@ class ContractualAgreementWithCSP(ControlProcedure):
     def __init__(self, stream: str, owner: str, state: CSPState):
         ControlProcedure.__init__(self, ControlProcedureId, stream, owner, state)
 
-#test1 = CSPState("Azure")
-#test2 = CSPState("Azure", False)
-#result = test1.Validate(test2)
-#print(result.success)
-#print(result.evidence)

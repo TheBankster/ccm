@@ -6,7 +6,7 @@ from json import JSONEncoder
 
 ControlProcedureId = 2
 
-class IPSState(ControlProcedureState):
+class EndpointIntegrityState(ControlProcedureState):
     __secureBoot: bool
     __antimalwareCheckResult: str
 
@@ -31,20 +31,12 @@ class IPSState(ControlProcedureState):
         if self.CpId() != state.CpId():
             raise ValueError("cpId mismatch: " + self.CpId() + " vs " + state.CpId())
         success = \
-            (self.SecureBootEnabled() == state.SecureBootEnabled()) and \
-            (self.AntiMalwareCheckResult() == state.AntiMalwareCheckResult())
+            (not self.SecureBootEnabled() or state.SecureBootEnabled()) and \
+            (self.AntiMalwareCheckResult() == "" or self.AntiMalwareCheckResult() == state.AntiMalwareCheckResult())
         evidence = EvidenceFromState(self, state)
 
         return ControlProcedureAssessmentResult(success, evidence)
 
-class ContractualAgreementWithCSP(ControlProcedure):
-    def __init__(self, stream: str, owner: str, state: IPSState):
+class EndpointIntegrity(ControlProcedure):
+    def __init__(self, stream: str, owner: str, state: EndpointIntegrityState):
         ControlProcedure.__init__(self, ControlProcedureId, stream, owner, state)
-
-#test1 = IPSState(secureBoot=True, antimalwareCheckResult="Passed")
-#test2 = IPSState(secureBoot=False, antimalwareCheckResult="Passed")
-#test3 = IPSState(secureBoot=True,antimalwareCheckResult="Infected with StuxNet")
-#result2 = test1.Validate(test2)
-#result3 = test1.Validate(test3)
-#print(result2.success, result2.evidence)
-#print(result3.success, result3.evidence)
