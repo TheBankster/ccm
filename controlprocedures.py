@@ -88,6 +88,11 @@ class ControlProcedure:
             raise ValueError(f"Invalid owner format: {e}")
         self.__expectedState = expectedState
 
+    def UpdateExpectedState(self, newState: ControlProcedureState):
+        if self.CpId() != newState.CpId():
+            raise ValueError("cpId mismatch: " + self.CpId() + " vs " + newState.CpId())
+        self.__expectedState = newState
+        
     def __AppendControlProcedureCompletionEvent(self, assessmentResult: ControlProcedureAssessmentResult):
         dataString = \
             "{\"ControlProcedureID\": " + str(self.__cpId) + "," + \
