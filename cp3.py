@@ -2,11 +2,10 @@ from __future__ import annotations # allows passing class objects to class membe
 from controlprocedures import ControlProcedure, ControlProcedureState, ControlProcedureAssessmentResult, EvidenceFromState
 
 import json
-from json import JSONEncoder
 
 ControlProcedureId = 3
 
-class TEEState(ControlProcedureState):
+class TEEIsolationState(ControlProcedureState):
     __correctCode: bool
     __correctConfiguration: bool
 
@@ -25,16 +24,14 @@ class TEEState(ControlProcedureState):
         dictionary = {"CorrectCode": self.CorrectCode(), "CorrectConfiguration": self.CorrectConfiguration()}
         return json.dumps(self, default=lambda o: dictionary)
 
-    def Validate(self, state: TEEState) -> ControlProcedureAssessmentResult:
+    def Validate(self, state: TEEIsolationState) -> ControlProcedureAssessmentResult:
         if self.CpId() != state.CpId():
             raise ValueError("cpId mismatch: " + self.CpId() + " vs " + state.CpId())
         success = \
             (not self.CorrectCode() or state.CorrectCode()) and \
             (not self.CorrectConfiguration() or state.CorrectConfiguration())
-        evidence = EvidenceFromState(self, state)
-
-        return ControlProcedureAssessmentResult(success, evidence)
+        return ControlProcedureAssessmentResult(success, EvidenceFromState(self, state))
 
 class TEEIsolation(ControlProcedure):
-    def __init__(self, stream: str, owner: str, state: TEEState):
+    def __init__(self, stream: str, owner: str, state: TEEIsolationState):
         ControlProcedure.__init__(self, ControlProcedureId, stream, owner, state)

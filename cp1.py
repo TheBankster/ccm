@@ -2,7 +2,6 @@ from __future__ import annotations # allows passing class objects to class membe
 from controlprocedures import ControlProcedure, ControlProcedureState, ControlProcedureAssessmentResult, EvidenceFromState
 
 import json
-from json import JSONEncoder
 
 ControlProcedureId = 1
 
@@ -31,9 +30,7 @@ class CSPState(ControlProcedureState):
         success = \
             (self.Csp() == state.Csp()) and \
             (not self.Soc3Passed() or state.Soc3Passed())
-        evidence = EvidenceFromState(self, state)
-
-        return ControlProcedureAssessmentResult(success, evidence)
+        return ControlProcedureAssessmentResult(success, EvidenceFromState(self, state))
 
 class ContractualAgreementWithCSP(ControlProcedure):
     def __init__(self, stream: str, owner: str, state: CSPState):

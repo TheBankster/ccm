@@ -2,11 +2,10 @@ from __future__ import annotations # allows passing class objects to class membe
 from controlprocedures import ControlProcedure, ControlProcedureState, ControlProcedureAssessmentResult, EvidenceFromState
 
 import json
-from json import JSONEncoder
 
 ControlProcedureId = 4
 
-class MachineMaintenanceState(ControlProcedureState):
+class SystemMaintenanceState(ControlProcedureState):
     __recentlyPatched: bool
     __leastPrivilege: bool
 
@@ -25,24 +24,14 @@ class MachineMaintenanceState(ControlProcedureState):
         dictionary = {"RecentlyPatched": self.RecentlyPatched(), "LeastPrivilege": self.LeastPrivilege()}
         return json.dumps(self, default=lambda o: dictionary)
 
-    def Validate(self, state: MachineMaintenanceState) -> ControlProcedureAssessmentResult:
+    def Validate(self, state: SystemMaintenanceState) -> ControlProcedureAssessmentResult:
         if self.CpId() != state.CpId():
             raise ValueError("cpId mismatch: " + self.CpId() + " vs " + state.CpId())
         success = \
-            (self.RecentlyPatched() == state.RecentlyPatched()) and \
-            (self.LeastPrivilege() == state.LeastPrivilege())
-        evidence = EvidenceFromState(self, state)
+            (not self.RecentlyPatched() or state.RecentlyPatched()) and \
+            (not self.LeastPrivilege() or state.LeastPrivilege())
+        return ControlProcedureAssessmentResult(success, EvidenceFromState(self, state))
 
-        return ControlProcedureAssessmentResult(success, evidence)
-
-class MachineMaintenance(ControlProcedure):
-    def __init__(self, stream: str, owner: str, state: TEEState):
+class SystemMaintenance(ControlProcedure):
+    def __init__(self, stream: str, owner: str, state: SystemMaintenanceState):
         ControlProcedure.__init__(self, ControlProcedureId, stream, owner, state)
-
-test1 = MachineMaintenanceState(recentlyPatched=True, leastPrivilege=True)
-test2 = MachineMaintenanceState(recentlyPatched=False, leastPrivilege=True)
-test3 = MachineMaintenanceState(recentlyPatched=True,leastPrivilege=False)
-result2 = test1.Validate(test2)
-result3 = test1.Validate(test3)
-print(result2.success, result2.evidence)
-print(result3.success, result3.evidence)

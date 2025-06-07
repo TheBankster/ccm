@@ -2,7 +2,6 @@ from __future__ import annotations # allows passing class objects to class membe
 from controlprocedures import ControlProcedure, ControlProcedureState, ControlProcedureAssessmentResult, EvidenceFromState
 
 import json
-from json import JSONEncoder
 
 ControlProcedureId = 2
 
@@ -27,15 +26,13 @@ class EndpointIntegrityState(ControlProcedureState):
             "AntiMalwareCheckResult": self.AntiMalwareCheckResult()}
         return json.dumps(self, default=lambda o: dictionary)
 
-    def Validate(self, state: IPSState) -> ControlProcedureAssessmentResult:
+    def Validate(self, state: EndpointIntegrityState) -> ControlProcedureAssessmentResult:
         if self.CpId() != state.CpId():
             raise ValueError("cpId mismatch: " + self.CpId() + " vs " + state.CpId())
         success = \
             (not self.SecureBootEnabled() or state.SecureBootEnabled()) and \
             (self.AntiMalwareCheckResult() == "" or self.AntiMalwareCheckResult() == state.AntiMalwareCheckResult())
-        evidence = EvidenceFromState(self, state)
-
-        return ControlProcedureAssessmentResult(success, evidence)
+        return ControlProcedureAssessmentResult(success, EvidenceFromState(self, state))
 
 class EndpointIntegrity(ControlProcedure):
     def __init__(self, stream: str, owner: str, state: EndpointIntegrityState):
