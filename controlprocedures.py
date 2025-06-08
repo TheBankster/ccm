@@ -6,6 +6,7 @@ from __future__ import annotations # allows passing class objects to class membe
 from eventtypes import ControlProcedureCompleted
 from esdbclient import NewEvent, StreamState
 from utils import GlobalClient
+from typing import final
 import re
 import json
 
@@ -31,45 +32,73 @@ ControlProcedureNames = [
     ]
 
 class ControlProcedureAssessmentResult:
-    success: bool
-    evidence: str
-    def __init__(self, success: bool, evidence: str):
-        self.success = success
-        self.evidence = evidence
+    __success: bool
+    __expected: dict
+    __actual: dict
+
+    def __init__(self, success: bool, expected: dict, actual: dict):
+        self.__success = success
+        self.__expected = expected
+        self.__actual = actual
+
+    @final
+    def toDict(self) -> dict:
+        return {"success": self.__success, "expected": self.__expected, "actual": self.__actual}
+    
+    @final
+    def isSuccessful(self) -> bool:
+        return self.__success
+    
+    @final
+    def toJson(self) -> str:
+        return json.dumps(self.toDict())
+
 
 # Abstract base class for all derived CP states
 class ControlProcedureState:
     __cpId: int # for sanity checking
+
     def __init__(self, cpId: int):
         self.__cpId = cpId
     
+    @final
     def CpId(self) -> int:
         return self.__cpId
     
-    # Returns 'True' if 'actual' state is valid when compared with the 'expected' state
-    # Implement in each derived class
-    def Validate(self, actual: ControlProcedureState) -> ControlProcedureAssessmentResult:
+    def Compare(self, actual: ControlProcedureState) -> bool:
         raise NotImplementedError("Implement Validate() method")
     
-    def toJson(self) -> str:
-        raise NotImplementedError("Implement toJson() method")
-
-def EvidenceFromState(current: ControlProcedureState, actual: ControlProcedureState) -> str:
-    return "{\"expected\": " + current.toJson() + ", \"actual\": " + actual.toJson() + "}"
-
-# Placeholder CP state class until the rest are implemented
-class SampleControlProcedureState(ControlProcedureState):
-    expectedState: bool
-    def __init__(self, cpId: int, expectedState: bool):
-        ControlProcedureState.__init__(self, cpId)
-        self.expectedState = expectedState
-
-    def Validate(self, state: SampleControlProcedureState) -> ControlProcedureAssessmentResult:
+    # Returns 'True' if 'actual' state is valid when compared with the 'expected' state
+    # Implement in each derived class
+    @final
+    def Validate(self, state: ControlProcedureState) -> ControlProcedureAssessmentResult:
         if self.CpId() != state.CpId():
             raise ValueError("cpId mismatch: " + self.CpId() + " vs " + state.CpId())
         return ControlProcedureAssessmentResult(
-            success = (self.expectedState == state.expectedState),
-            evidence = "Expected " + str(self.expectedState) + " Received " + str(state.expectedState))
+            success=self.Compare(state),
+            expected=self.toDict(),
+            actual=state.toDict())
+    
+    def toDict(self) -> dict:
+        raise NotImplementedError("Implement toDict() method")
+
+# Placeholder CP state class until the rest are implemented
+class SampleControlProcedureState(ControlProcedureState):
+    expectedBool: bool
+    expectedStr: str
+
+    def __init__(self, expectedBool: bool, expectedStr: str):
+        ControlProcedureState.__init__(self, 0)
+        self.expectedBool = bool
+        self.expectedStr = str
+
+    def toDict(self) -> dict:
+        return {"expectedBool": self.expectedBool, "expectedStr": self.expectedStr}
+
+    def Compare(self, state: SampleControlProcedureState) -> bool:
+            return \
+              (self.expectedBool == state.expectedBool) and \
+              (self.expectedStr == state.expectedStr)
 
 class ControlProcedure:
     __cpId: int
@@ -94,16 +123,16 @@ class ControlProcedure:
         self.__expectedState = newState
         
     def __AppendControlProcedureCompletionEvent(self, assessmentResult: ControlProcedureAssessmentResult):
-        dataString = \
-            "{\"ControlProcedureID\": " + str(self.__cpId) + "," + \
-            "\"Owner\": \"" + self.__owner + "\"," + \
-            "\"Success\": \"" + str(assessmentResult.success) + "\"," + \
-            "\"Evidence\":" + assessmentResult.evidence + "}"
+        evidence = {
+            "ControlProcedureID": self.__cpId,
+            "Owner": self.__owner,
+            "Result": assessmentResult.toDict()
+        }
         GlobalClient.append_to_stream(
             stream_name=self.__stream,
             events=NewEvent(
                 ControlProcedureCompleted,
-                data = dataString.encode('utf-8')),
+                data = json.dumps(evidence).encode('utf-8')),
             current_version=StreamState.ANY)
     
     def AssessControlProcedureState(self, assessedState: ControlProcedureState) -> ControlProcedureAssessmentResult:
@@ -111,22 +140,6 @@ class ControlProcedure:
     
     def ReportControlProcedureState(self, reportedState: ControlProcedureState):
         self.__AppendControlProcedureCompletionEvent(self.AssessControlProcedureState(reportedState))
-
-class ContractualAgreementWithCSP(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 1, stream, owner, SampleControlProcedureState(1))
-
-class EndpointIntrusionDetectionAndPrevention(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 2, stream, owner, SampleControlProcedureState(2))
-
-class TeeAssistedIsolation(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 3, stream, owner, SampleControlProcedureState(3))
-
-class MachineSystemMaintenance(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 4, stream, owner, SampleControlProcedureState(4))
 
 class CorrectServiceConfiguration(ControlProcedure):
     def __init__(self, stream: str, owner: str):

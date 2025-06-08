@@ -1,5 +1,5 @@
 from __future__ import annotations # allows passing class objects to class member functions
-from controlprocedures import ControlProcedure, ControlProcedureState, ControlProcedureAssessmentResult, EvidenceFromState
+from controlprocedures import ControlProcedure, ControlProcedureState
 
 import json
 
@@ -15,22 +15,18 @@ class CSPState(ControlProcedureState):
     def Soc3Passed(self) -> bool:
         return self.__soc3passed
     
-    def __init__(self, csp: str, soc3passed: bool = True):
+    def __init__(self, csp: str, soc3passed: bool):
         ControlProcedureState.__init__(self, ControlProcedureId)
         self.__csp = csp
         self.__soc3passed = soc3passed
 
-    def toJson(self):
-        dictionary = {"csp": self.Csp(), "soc3": self.Soc3Passed()}
-        return json.dumps(self, default=lambda o: dictionary)
+    def toDict(self):
+        return {"csp": self.Csp(), "soc3": self.Soc3Passed()}
 
-    def Validate(self, state: CSPState) -> ControlProcedureAssessmentResult:
-        if self.CpId() != state.CpId():
-            raise ValueError("cpId mismatch: " + self.CpId() + " vs " + state.CpId())
-        success = \
+    def Compare(self, state: CSPState) -> bool:
+        return \
             (self.Csp() == state.Csp()) and \
             (not self.Soc3Passed() or state.Soc3Passed())
-        return ControlProcedureAssessmentResult(success, EvidenceFromState(self, state))
 
 class ContractualAgreementWithCSP(ControlProcedure):
     def __init__(self, stream: str, owner: str, state: CSPState):

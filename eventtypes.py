@@ -3,8 +3,7 @@ ControlObjectiveAchieved = "ControlObjectiveAchieved"
 ControlObjectiveFailed = "ControlObjectiveFailed"
 
 # Predicate Event Types
-PredicateSucceeded = "PredicateSucceeded"
-PredicateFailed = "PredicateFailed"
+PredicateAssessed = "PredicateAssessed"
 
 # Control Procedure Event Type
 ControlProcedureCompleted = "ControlProcedureCompleted"

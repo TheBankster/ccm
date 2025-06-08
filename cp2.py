@@ -1,5 +1,5 @@
 from __future__ import annotations # allows passing class objects to class member functions
-from controlprocedures import ControlProcedure, ControlProcedureState, ControlProcedureAssessmentResult, EvidenceFromState
+from controlprocedures import ControlProcedure, ControlProcedureState
 
 import json
 
@@ -20,19 +20,15 @@ class EndpointIntegrityState(ControlProcedureState):
         self.__secureBoot = secureBoot
         self.__antimalwareCheckResult = antimalwareCheckResult
 
-    def toJson(self):
-        dictionary = {
+    def toDict(self):
+        return { \
             "SecureBootEnabled": self.SecureBootEnabled(),
             "AntiMalwareCheckResult": self.AntiMalwareCheckResult()}
-        return json.dumps(self, default=lambda o: dictionary)
 
-    def Validate(self, state: EndpointIntegrityState) -> ControlProcedureAssessmentResult:
-        if self.CpId() != state.CpId():
-            raise ValueError("cpId mismatch: " + self.CpId() + " vs " + state.CpId())
-        success = \
+    def Compare(self, state: EndpointIntegrityState) -> bool:
+        return \
             (not self.SecureBootEnabled() or state.SecureBootEnabled()) and \
             (self.AntiMalwareCheckResult() == "" or self.AntiMalwareCheckResult() == state.AntiMalwareCheckResult())
-        return ControlProcedureAssessmentResult(success, EvidenceFromState(self, state))
 
 class EndpointIntegrity(ControlProcedure):
     def __init__(self, stream: str, owner: str, state: EndpointIntegrityState):

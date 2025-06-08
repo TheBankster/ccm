@@ -1,5 +1,5 @@
 from __future__ import annotations # allows passing class objects to class member functions
-from controlprocedures import ControlProcedure, ControlProcedureState, ControlProcedureAssessmentResult, EvidenceFromState
+from controlprocedures import ControlProcedure, ControlProcedureState
 
 import json
 
@@ -20,17 +20,13 @@ class SystemMaintenanceState(ControlProcedureState):
         self.__recentlyPatched = recentlyPatched
         self.__leastPrivilege = leastPrivilege
 
-    def toJson(self):
-        dictionary = {"RecentlyPatched": self.RecentlyPatched(), "LeastPrivilege": self.LeastPrivilege()}
-        return json.dumps(self, default=lambda o: dictionary)
+    def toDict(self):
+        return {"RecentlyPatched": self.RecentlyPatched(), "LeastPrivilege": self.LeastPrivilege()}
 
-    def Validate(self, state: SystemMaintenanceState) -> ControlProcedureAssessmentResult:
-        if self.CpId() != state.CpId():
-            raise ValueError("cpId mismatch: " + self.CpId() + " vs " + state.CpId())
-        success = \
+    def Compare(self, state: SystemMaintenanceState) -> bool:
+        return \
             (not self.RecentlyPatched() or state.RecentlyPatched()) and \
             (not self.LeastPrivilege() or state.LeastPrivilege())
-        return ControlProcedureAssessmentResult(success, EvidenceFromState(self, state))
 
 class SystemMaintenance(ControlProcedure):
     def __init__(self, stream: str, owner: str, state: SystemMaintenanceState):

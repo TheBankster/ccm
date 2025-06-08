@@ -3,14 +3,14 @@
 from cp1 import CSPState, ContractualAgreementWithCSP
 from utils import PayrollDevStream
 
-test1 = CSPState("Azure")
+test1 = CSPState("Azure", True)
 test2 = CSPState("Azure", False)
 result = test1.Validate(test2)
-print(result.success)
-print(result.evidence)
+print(result.isSuccessful())
+print(result.toJson())
 
 # Payroll application in Dev environment will be deployed in Azure
-PayrollDevCSPState = CSPState(csp="Azure")
+PayrollDevCSPState = CSPState(csp="Azure", soc3passed=True)
 CP1 = ContractualAgreementWithCSP(
     stream=PayrollDevStream,
     owner="N702766",
