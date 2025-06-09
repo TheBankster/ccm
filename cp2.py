@@ -6,29 +6,16 @@ import json
 ControlProcedureId = 2
 
 class EndpointIntegrityState(ControlProcedureState):
-    __secureBoot: bool
-    __antimalwareCheckResult: str
+    def __init__(self, secureBoot: bool, antimalwareCheck: str):
+        ControlProcedureState.__init__(
+            self,
+            cpId=ControlProcedureId,
+            state={"SecureBoot": secureBoot, "AntiMalwareCheck": antimalwareCheck})
 
-    def SecureBootEnabled(self) -> bool:
-        return self.__secureBoot
-    
-    def AntiMalwareCheckResult(self) -> str:
-        return self.__antimalwareCheckResult
-    
-    def __init__(self, secureBoot: bool, antimalwareCheckResult: str):
-        ControlProcedureState.__init__(self, ControlProcedureId)
-        self.__secureBoot = secureBoot
-        self.__antimalwareCheckResult = antimalwareCheckResult
-
-    def toDict(self):
-        return { \
-            "SecureBootEnabled": self.SecureBootEnabled(),
-            "AntiMalwareCheckResult": self.AntiMalwareCheckResult()}
-
-    def Compare(self, state: EndpointIntegrityState) -> bool:
+    def Compare(self, actual: EndpointIntegrityState) -> bool:
         return \
-            (not self.SecureBootEnabled() or state.SecureBootEnabled()) and \
-            (self.AntiMalwareCheckResult() == "" or self.AntiMalwareCheckResult() == state.AntiMalwareCheckResult())
+            (not self.state["SecureBoot"] or actual.state["SecureBoot"]) and \
+            (self.state["AntiMalwareCheck"] == actual.state["AntiMalwareCheck"])
 
 class EndpointIntegrity(ControlProcedure):
     def __init__(self, stream: str, owner: str, expectedState: EndpointIntegrityState):

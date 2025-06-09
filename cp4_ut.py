@@ -1,7 +1,7 @@
 # CP4 Unit Tests
 
 from cp4 import SystemMaintenanceState, SystemMaintenance
-from utils import PayrollDevStream
+from utils import UnitTestStream
 
 test1 = SystemMaintenanceState(recentlyPatched=True, leastPrivilege=True)
 test2 = SystemMaintenanceState(recentlyPatched=False, leastPrivilege=True)
@@ -12,11 +12,11 @@ print(result2.isSuccessful(), result2.toJson())
 print(result3.isSuccessful(), result3.toJson())
 
 # Payroll application in Dev environment will have recentlyPatched = True and leastPrivilege = False
-PayrollDevSystemMaintenanceState = SystemMaintenanceState(recentlyPatched=True, leastPrivilege=False)
+UnitTestSystemMaintenanceState = SystemMaintenanceState(recentlyPatched=True, leastPrivilege=False)
 CP4 = SystemMaintenance(
-    stream=PayrollDevStream,
+    stream=UnitTestStream,
     owner="F938291",
-    expectedState=PayrollDevSystemMaintenanceState)
+    expectedState=UnitTestSystemMaintenanceState)
 
 SystemMaintenanceCompliantState = SystemMaintenanceState(recentlyPatched=True, leastPrivilege=False)
 SystemMaintenanceNonCompliantState = SystemMaintenanceState(recentlyPatched=False, leastPrivilege=True)

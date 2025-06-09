@@ -2,15 +2,13 @@
 
 from predicates import Mode, PredicateAssessmentReport
 from VerifierTrustworthinessPredicate import VerifierTrustworthiness as VT
-from utils import GlobalClient, DeploymentStream
+from utils import GlobalClient, UnitTestStream
 from eventtypes import ControlProcedureCompleted, PredicateAssessed
 from applications import App
 from environments import Env
 from controlprocedures import ControlProcedureCompletionReport
 from cp2 import EndpointIntegrity, EndpointIntegrityState
 from cp4 import SystemMaintenance, SystemMaintenanceState
-
-UnitTestStream = DeploymentStream(App.UnitTest, Env.UAT, unittest=True)
 
 vt = VT(stream=UnitTestStream, mode=Mode.Firmwide)
 

@@ -32,26 +32,22 @@ ControlProcedureNames = [
     ]
 
 class ControlProcedureAssessmentResult:
-    __success: bool
-    __expected: dict
-    __actual: dict
+    success: bool
+    expected: dict
+    actual: dict
 
     def __init__(self, success: bool, expected: dict, actual: dict):
-        self.__success = success
-        self.__expected = expected
-        self.__actual = actual
+        self.success = success
+        self.expected = expected
+        self.actual = actual
 
     @final
-    def toDict(self) -> dict:
-        return {"success": self.__success, "expected": self.__expected, "actual": self.__actual}
-    
-    @final
     def isSuccessful(self) -> bool:
-        return self.__success
+        return self.success
     
     @final
     def toJson(self) -> str:
-        return json.dumps(self.toDict())
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
     
     @staticmethod
     def fromJson(encoding: str) -> ControlProcedureAssessmentResult:
@@ -63,14 +59,12 @@ class ControlProcedureAssessmentResult:
 
 # Abstract base class for all derived CP states
 class ControlProcedureState:
-    __cpId: int # for sanity checking
+    cpId: int # for sanity checking
+    state: dict
 
-    def __init__(self, cpId: int):
-        self.__cpId = cpId
-    
-    @final
-    def CpId(self) -> int:
-        return self.__cpId
+    def __init__(self, cpId: int, state: dict):
+        self.cpId = cpId
+        self.state = state
     
     def Compare(self, actual: ControlProcedureState) -> bool:
         raise NotImplementedError("Implement Validate() method")
@@ -78,17 +72,14 @@ class ControlProcedureState:
     # Returns 'True' if 'actual' state is valid when compared with the 'expected' state
     # Implement in each derived class
     @final
-    def Validate(self, state: ControlProcedureState) -> ControlProcedureAssessmentResult:
-        if self.CpId() != state.CpId():
+    def Validate(self, actual: ControlProcedureState) -> ControlProcedureAssessmentResult:
+        if self.cpId != actual.cpId:
             raise ValueError("cpId mismatch: " + self.CpId() + " vs " + state.CpId())
         return ControlProcedureAssessmentResult(
-            success=self.Compare(state),
-            expected=self.toDict(),
-            actual=state.toDict())
+            success=self.Compare(actual),
+            expected=self.state,
+            actual=actual.state)
     
-    def toDict(self) -> dict:
-        raise NotImplementedError("Implement toDict() method")
-
 def ValidateOwner(owner: str):
     assert re.match(r'^[A-Z]\d{6}$', owner)
 
@@ -103,14 +94,9 @@ class ControlProcedureCompletionReport:
         self.owner = owner
         self.result = result
     
-    def toDict(self) -> dict:
-        return {
-            "cpId": self.cpId,
-            "owner": self.owner,
-            "result": self.result.toDict() }
-
+    @final
     def toJson(self) -> str:
-        return json.dumps(self.toDict())
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
     
     @staticmethod
     def fromJson(encoding: str) -> ControlProcedureCompletionReport:
@@ -155,65 +141,3 @@ class ControlProcedure:
     
     def ReportControlProcedureState(self, reportedState: ControlProcedureState):
         self.__AppendControlProcedureCompletionEvent(self.AssessControlProcedureState(reportedState))
-
-#
-# Placeholder code below this line.
-#
-
-# Temporary CP state class until the rest are implemented
-class SampleControlProcedureState(ControlProcedureState):
-    expectedBool: bool
-    expectedStr: str
-
-    def __init__(self, expectedBool: bool, expectedStr: str):
-        ControlProcedureState.__init__(self, 0)
-        self.expectedBool = bool
-        self.expectedStr = str
-
-    def toDict(self) -> dict:
-        return {"expectedBool": self.expectedBool, "expectedStr": self.expectedStr}
-
-    def Compare(self, state: SampleControlProcedureState) -> bool:
-            return \
-              (self.expectedBool == state.expectedBool) and \
-              (self.expectedStr == state.expectedStr)
-
-class CorrectServiceConfiguration(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 5, stream, owner, SampleControlProcedureState(5))
-
-class CorrectServiceNetworkSurface(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 6, stream, owner, SampleControlProcedureState(6))
-
-class HealthAndLatencyChecks(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 7, stream, owner, SampleControlProcedureState(7))
-
-class RedundancyAndAutoScalingChecks(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 8, stream, owner, SampleControlProcedureState(8))
-
-class ServiceConfigurationProtection(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 9, stream, owner, SampleControlProcedureState(9))
-
-class ServiceKeyLifecycleManagement(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 10, stream, owner, SampleControlProcedureState(10))
-
-class ServiceLogRedactionAndProtection(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 11, stream, owner, SampleControlProcedureState(11))
-
-class ServiceDataInTransitProtection(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 12, stream, owner, SampleControlProcedureState(12))
-
-class ServicePoliciesStoredInSOR(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 13, stream, owner, SampleControlProcedureState(13))
-
-class ServicePolicyAndKeyHistoryStorage(ControlProcedure):
-    def __init__(self, stream: str, owner: str):
-        ControlProcedure.__init__(self, 14, stream, owner, SampleControlProcedureState(14))

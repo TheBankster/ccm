@@ -31,3 +31,4 @@ GlobalClient = CcmClient()
 
 PayrollDevStream = DeploymentStream(App.Payroll, Env.DEV)
 TimecardProdStream = DeploymentStream(App.Timecard, Env.PROD)
+UnitTestStream = DeploymentStream(App.UnitTest, Env.UAT, unittest=True)

@@ -6,29 +6,17 @@ import json
 ControlProcedureId = 1
 
 class CSPState(ControlProcedureState):
-    __csp: str
-    __soc3passed: bool
+    def __init__(self, csp: str, soc3: bool):
+        ControlProcedureState.__init__(
+            self,
+            cpId=ControlProcedureId,
+            state={"CSP": csp, "SOC3": soc3})
 
-    def Csp(self) -> str:
-        return self.__csp
-    
-    def Soc3Passed(self) -> bool:
-        return self.__soc3passed
-    
-    def __init__(self, csp: str, soc3passed: bool):
-        ControlProcedureState.__init__(self, ControlProcedureId)
-        self.__csp = csp
-        self.__soc3passed = soc3passed
-
-    def toDict(self):
-        return {"csp": self.Csp(), "soc3": self.Soc3Passed()}
-
-    def Compare(self, state: CSPState) -> bool:
+    def Compare(self, actual: CSPState) -> bool:
         return \
-            (self.Csp() == state.Csp()) and \
-            (not self.Soc3Passed() or state.Soc3Passed())
+            (self.state["CSP"] == actual.state["CSP"]) and \
+            (not self.state["SOC3"] or actual.state["SOC3"])
 
 class ContractualAgreementWithCSP(ControlProcedure):
     def __init__(self, stream: str, owner: str, expectedState: CSPState):
         ControlProcedure.__init__(self, ControlProcedureId, stream, owner, expectedState)
-
