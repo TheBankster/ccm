@@ -1,7 +1,7 @@
 # Continuous Control Monitoring Main Loop
 
 from utils import GlobalClient
-from eventtypes import ControlObjectiveFailed, ControlObjectiveAchieved, PredicateSucceeded, PredicateFailed
+from eventtypes import ControlObjectiveFailed, ControlObjectiveAchieved, PredicateAssessed, ControlProcedureCompleted
 
 def HandleControlObjectiveFailedEvent(data: str):
     print(data)
@@ -11,11 +11,7 @@ def HandleControlObjectiveAchievedEvent(data: str):
     print(data)
     return
 
-def HandlePredicateSucceededEvent(data: str):
-    print(data)
-    return
-
-def HandlePredicateFailedEvent(data: str):
+def HandlePredicateAssessedEvent(data: str):
     print(data)
     return
 
@@ -26,9 +22,7 @@ with GlobalClient.subscribe_to_all() as subscription:
             HandleControlObjectiveFailedEvent(event.data.decode())
         elif event.type == ControlObjectiveAchieved:
             HandleControlObjectiveAchievedEvent(event.data.decode())
-        elif event.type == PredicateSucceeded:
-            HandlePredicateSucceededEvent(event.data.decode())
-        elif event.type == PredicateFailed:
-            HandlePredicateFailedEvent(event.data.decode())
+        elif event.type == PredicateAssessed:
+            HandlePredicateAssessedEvent(event.data.decode())
 
 

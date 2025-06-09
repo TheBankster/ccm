@@ -52,7 +52,14 @@ class ControlProcedureAssessmentResult:
     @final
     def toJson(self) -> str:
         return json.dumps(self.toDict())
-
+    
+    @staticmethod
+    def fromJson(encoding: str) -> ControlProcedureAssessmentResult:
+        decoding = json.loads(encoding)
+        return ControlProcedureAssessmentResult(
+            success=decoding["success"],
+            expected=decoding["expected"],
+            actual=decoding["actual"])
 
 # Abstract base class for all derived CP states
 class ControlProcedureState:
@@ -82,7 +89,78 @@ class ControlProcedureState:
     def toDict(self) -> dict:
         raise NotImplementedError("Implement toDict() method")
 
-# Placeholder CP state class until the rest are implemented
+def ValidateOwner(owner: str):
+    assert re.match(r'^[A-Z]\d{6}$', owner)
+
+class ControlProcedureCompletionReport:
+    cpId: int
+    owner: str
+    result: ControlProcedureAssessmentResult
+
+    def __init__(self, cpId: int, owner: str, result: ControlProcedureAssessmentResult):
+        self.cpId = cpId
+        ValidateOwner(owner)
+        self.owner = owner
+        self.result = result
+    
+    def toDict(self) -> dict:
+        return {
+            "cpId": self.cpId,
+            "owner": self.owner,
+            "result": self.result.toDict() }
+
+    def toJson(self) -> str:
+        return json.dumps(self.toDict())
+    
+    @staticmethod
+    def fromJson(encoding: str) -> ControlProcedureCompletionReport:
+        decoding = json.loads(encoding)
+        return ControlProcedureCompletionReport(
+            cpId=decoding["cpId"],
+            owner=decoding["owner"],
+            result=ControlProcedureAssessmentResult.fromJson(json.dumps(decoding["result"])))
+
+class ControlProcedure:
+    __cpId: int
+    __stream: str
+    __owner: str
+    __expectedState: ControlProcedureState
+
+    def __init__(self, cpId: int, stream: str, owner: str, expectedState: ControlProcedureState):
+        self.__cpId = cpId
+        self.__stream = stream
+        ValidateOwner(owner)
+        self.__owner = owner
+        self.__expectedState = expectedState
+
+    def UpdateExpectedState(self, newState: ControlProcedureState):
+        if self.CpId() != newState.CpId():
+            raise ValueError("cpId mismatch: " + self.CpId() + " vs " + newState.CpId())
+        self.__expectedState = newState
+        
+    def __AppendControlProcedureCompletionEvent(self, assessmentResult: ControlProcedureAssessmentResult):
+        completionReport = ControlProcedureCompletionReport(
+            cpId=self.__cpId,
+            owner=self.__owner,
+            result=assessmentResult)
+        GlobalClient.append_to_stream(
+            stream_name=self.__stream,
+            events=NewEvent(
+                type=ControlProcedureCompleted,
+                data=completionReport.toJson().encode('utf-8')),
+            current_version=StreamState.ANY)
+    
+    def AssessControlProcedureState(self, assessedState: ControlProcedureState) -> ControlProcedureAssessmentResult:
+        return self.__expectedState.Validate(assessedState)
+    
+    def ReportControlProcedureState(self, reportedState: ControlProcedureState):
+        self.__AppendControlProcedureCompletionEvent(self.AssessControlProcedureState(reportedState))
+
+#
+# Placeholder code below this line.
+#
+
+# Temporary CP state class until the rest are implemented
 class SampleControlProcedureState(ControlProcedureState):
     expectedBool: bool
     expectedStr: str
@@ -99,47 +177,6 @@ class SampleControlProcedureState(ControlProcedureState):
             return \
               (self.expectedBool == state.expectedBool) and \
               (self.expectedStr == state.expectedStr)
-
-class ControlProcedure:
-    __cpId: int
-    __stream: str
-    __owner: str
-    __expectedState: ControlProcedureState
-
-    def __init__(self, cpId: int, stream: str, owner: str, expectedState: ControlProcedureState):
-        self.__cpId = cpId
-        self.__stream = stream
-        try:
-            if not re.match(r'^[A-Z]\d{6}$', owner):
-                raise ValueError("Owner must be one capital letter followed by six digits")
-            self.__owner = owner
-        except ValueError as e:
-            raise ValueError(f"Invalid owner format: {e}")
-        self.__expectedState = expectedState
-
-    def UpdateExpectedState(self, newState: ControlProcedureState):
-        if self.CpId() != newState.CpId():
-            raise ValueError("cpId mismatch: " + self.CpId() + " vs " + newState.CpId())
-        self.__expectedState = newState
-        
-    def __AppendControlProcedureCompletionEvent(self, assessmentResult: ControlProcedureAssessmentResult):
-        evidence = {
-            "ControlProcedureID": self.__cpId,
-            "Owner": self.__owner,
-            "Result": assessmentResult.toDict()
-        }
-        GlobalClient.append_to_stream(
-            stream_name=self.__stream,
-            events=NewEvent(
-                ControlProcedureCompleted,
-                data = json.dumps(evidence).encode('utf-8')),
-            current_version=StreamState.ANY)
-    
-    def AssessControlProcedureState(self, assessedState: ControlProcedureState) -> ControlProcedureAssessmentResult:
-        return self.__expectedState.Validate(assessedState)
-    
-    def ReportControlProcedureState(self, reportedState: ControlProcedureState):
-        self.__AppendControlProcedureCompletionEvent(self.AssessControlProcedureState(reportedState))
 
 class CorrectServiceConfiguration(ControlProcedure):
     def __init__(self, stream: str, owner: str):

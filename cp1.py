@@ -29,6 +29,6 @@ class CSPState(ControlProcedureState):
             (not self.Soc3Passed() or state.Soc3Passed())
 
 class ContractualAgreementWithCSP(ControlProcedure):
-    def __init__(self, stream: str, owner: str, state: CSPState):
-        ControlProcedure.__init__(self, ControlProcedureId, stream, owner, state)
+    def __init__(self, stream: str, owner: str, expectedState: CSPState):
+        ControlProcedure.__init__(self, ControlProcedureId, stream, owner, expectedState)
 

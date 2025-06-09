@@ -14,7 +14,7 @@ PayrollDevCSPState = CSPState(csp="Azure", soc3passed=True)
 CP1 = ContractualAgreementWithCSP(
     stream=PayrollDevStream,
     owner="N702766",
-    state=PayrollDevCSPState)
+    expectedState=PayrollDevCSPState)
 
 PayrollDevCSPCompliantState = CSPState(csp="Azure", soc3passed=True)
 PayrollDevCSPNonCompliantState = CSPState(csp="Azure", soc3passed=False)

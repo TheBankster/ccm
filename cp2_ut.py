@@ -16,7 +16,7 @@ PayrollDevIntegrityState = EndpointIntegrityState(secureBoot=False, antimalwareC
 CP2 = EndpointIntegrity(
     stream=PayrollDevStream,
     owner="F123234",
-    state=PayrollDevIntegrityState)
+    expectedState=PayrollDevIntegrityState)
 
 EndpointIntegrityCompliantState = EndpointIntegrityState(secureBoot=True, antimalwareCheckResult="Passed")
 EndpointIntegrityNonCompliantState = EndpointIntegrityState(secureBoot=False, antimalwareCheckResult="StuxNet")

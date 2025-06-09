@@ -16,7 +16,7 @@ PayrollDevSystemMaintenanceState = SystemMaintenanceState(recentlyPatched=True, 
 CP4 = SystemMaintenance(
     stream=PayrollDevStream,
     owner="F938291",
-    state=PayrollDevSystemMaintenanceState)
+    expectedState=PayrollDevSystemMaintenanceState)
 
 SystemMaintenanceCompliantState = SystemMaintenanceState(recentlyPatched=True, leastPrivilege=False)
 SystemMaintenanceNonCompliantState = SystemMaintenanceState(recentlyPatched=False, leastPrivilege=True)

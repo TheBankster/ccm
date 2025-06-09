@@ -31,5 +31,5 @@ class EndpointIntegrityState(ControlProcedureState):
             (self.AntiMalwareCheckResult() == "" or self.AntiMalwareCheckResult() == state.AntiMalwareCheckResult())
 
 class EndpointIntegrity(ControlProcedure):
-    def __init__(self, stream: str, owner: str, state: EndpointIntegrityState):
-        ControlProcedure.__init__(self, ControlProcedureId, stream, owner, state)
+    def __init__(self, stream: str, owner: str, expectedState: EndpointIntegrityState):
+        ControlProcedure.__init__(self, ControlProcedureId, stream, owner, expectedState)

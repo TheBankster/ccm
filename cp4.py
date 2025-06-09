@@ -29,5 +29,5 @@ class SystemMaintenanceState(ControlProcedureState):
             (not self.LeastPrivilege() or state.LeastPrivilege())
 
 class SystemMaintenance(ControlProcedure):
-    def __init__(self, stream: str, owner: str, state: SystemMaintenanceState):
-        ControlProcedure.__init__(self, ControlProcedureId, stream, owner, state)
+    def __init__(self, stream: str, owner: str, expectedState: SystemMaintenanceState):
+        ControlProcedure.__init__(self, ControlProcedureId, stream, owner, expectedState)

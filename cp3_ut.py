@@ -16,7 +16,7 @@ PayrollDevTEEIsolationState = TEEIsolationState(correctCode=True, correctConfigu
 CP3 = TEEIsolation(
     stream=PayrollDevStream,
     owner="E983729",
-    state=PayrollDevTEEIsolationState)
+    expectedState=PayrollDevTEEIsolationState)
 
 EndpointTEECompliantState = TEEIsolationState(correctCode=True, correctConfiguration=True)
 EndpointTEENonCompliantState = TEEIsolationState(correctCode=False, correctConfiguration=True)

@@ -1,8 +1,10 @@
 import uuid
-from esdbclient import EventStoreDBClient, NewEvent
+from esdbclient import EventStoreDBClient
 from enum import Enum
 from applications import App
 from environments import Env
+from datetime import date
+import time
 
 # Connection
 
@@ -15,8 +17,15 @@ def KurrentUri(host = DefaultHost, port = DefaultPort):
 def CcmClient(host = DefaultHost, port = DefaultPort):
     return EventStoreDBClient(KurrentUri(host, port))
 
-def DeploymentStream(app: App, env: Env) -> str:
-    return app.name + "-" + str(app.value) + "-" + env.name
+def DeploymentStream(app: App, env: Env, unittest: bool = False) -> str:
+    if unittest:
+        # ensure unique id for unit tests
+        result = "Unit-Test-Stream-" + str(time.monotonic_ns())
+    else:
+        result = app.name + "-" + str(app.value) + "-" + env.name
+        # for hackathon each day means different stream names
+        result += "-" + date.today().isoformat()
+    return result
 
 GlobalClient = CcmClient()
 

@@ -29,5 +29,5 @@ class TEEIsolationState(ControlProcedureState):
             (not self.CorrectConfiguration() or state.CorrectConfiguration())
 
 class TEEIsolation(ControlProcedure):
-    def __init__(self, stream: str, owner: str, state: TEEIsolationState):
-        ControlProcedure.__init__(self, ControlProcedureId, stream, owner, state)
+    def __init__(self, stream: str, owner: str, expectedState: TEEIsolationState):
+        ControlProcedure.__init__(self, ControlProcedureId, stream, owner, expectedState)
