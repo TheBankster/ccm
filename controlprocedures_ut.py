@@ -51,7 +51,7 @@ print(cpar4.toJson())
 print(cpar5.toJson())
 
 #
-print("ControlPRocedureCompletionReport unit tests")
+print("ControlProcedureCompletionReport unit tests")
 #
 
 cpcr = CPCR(

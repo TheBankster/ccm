@@ -87,7 +87,7 @@ class Predicate:
             else:
                 # Continue iterating; maybe something else Failed
                 continue
-        if self.__incomplete.count > 0:
+        if len(self.__incomplete) > 0:
             return AssessmentIndicator.Unknown
         else:
             return AssessmentIndicator.Succeeded
@@ -103,7 +103,7 @@ class Predicate:
         if cpId in self.__incomplete:
             self.__incomplete.remove(cpId)
         self.__complete[cpId] = completion
-        if self.PredicateAssessment() != AssessmentIndicator.Unknown:
+        if self.PredicateAssessment() != AssessmentIndicator.Unknown.value:
             # The assessment state is no longer unknown: can inform the Control Objective now
             assessmentReport = PredicateAssessmentReport(
                 coDomain=self.__coDomain,

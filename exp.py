@@ -1,24 +1,46 @@
 # experimentations go here
-from enum import Enum
-class AssessmentIndicator(Enum):
-    Unknown = -1
-    Failed = 0
-    Succeeded = 1
+from __future__ import annotations # allows passing class objects to class member functions
+import json
+from typing import final
 
-def Assessment(items: dict) -> AssessmentIndicator:
-        indicator = AssessmentIndicator.Succeeded
-        for key in items.keys():
-            value = items[key]
-            assert value == None or isinstance(value, bool)
-            if value == None:
-                indicator = AssessmentIndicator.Unknown
-                # Continue iterating, maybe something Failed
-            elif value == False:
-                indicator = AssessmentIndicator.Failed
-                # One Failed -- everything Failed
-                break
-            # otherwise completion is successful; continue iterating
-        return indicator
+class ControlProcedureAssessmentResult:
+    success: bool
+    expected: dict
+    actual: dict
 
-items = {1: True, 3: True, 5: True}
-print(str(Assessment(items)))
+    def __init__(self, success: bool, expected: dict, actual: dict):
+        self.success = success
+        self.expected = expected
+        self.actual = actual
+
+#    @final
+#    def toDict(self) -> dict:
+#        return {"success": self.__success, "expected": self.__expected, "actual": self.__actual}
+    
+    @final
+    def isSuccessful(self) -> bool:
+        return self.success
+    
+    @final
+    def toJson(self) -> str:
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
+    
+    @staticmethod
+    def fromJson(encoding: str) -> ControlProcedureAssessmentResult:
+        decoding = json.loads(encoding)
+        return ControlProcedureAssessmentResult(
+            success=decoding["success"],
+            expected=decoding["expected"],
+            actual=decoding["actual"])
+
+cpar = ControlProcedureAssessmentResult(
+    success=True,
+    expected={"key1": 1, "key2": "value2"},
+    actual={"key1": 3, "key2": "value4"})
+
+jsonStr = cpar.toJson()
+print(jsonStr)
+cpar2 = ControlProcedureAssessmentResult.fromJson(jsonStr)
+jsonStr2 = cpar2.toJson()
+print(jsonStr2)
+assert(jsonStr == jsonStr2)
