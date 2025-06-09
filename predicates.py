@@ -4,7 +4,7 @@ from enum import Enum
 from controlprocedures import ControlProcedureCompletionReport
 from controlobjectives import ControlObjectiveDomain
 from eventtypes import PredicateAssessed
-from typing import List
+from typing import List, final
 from utils import GlobalClient
 import json
 
@@ -26,30 +26,22 @@ def PredicateIdentifier(coDomain: str, coId: int, predId: int) -> str:
     return coDomain + "-" + str(coId) + "-" + str(predId)
 
 class PredicateAssessmentReport:
-    __coDomain: int
-    __coId: int
-    __predId: int
-    __incomplete: List[int]
-    __complete: dict[int, ControlProcedureCompletionReport]
+    coDomain: int
+    coId: int
+    predId: int
+    incomplete: List[int]
+    complete: dict[int, ControlProcedureCompletionReport]
 
     def __init__(self, coDomain: int, coId: int, predId: int, incomplete: List[int], complete: dict[int, ControlProcedureCompletionReport]):
-        self.__coDomain = coDomain
-        self.__coId = coId
-        self.__predId = predId
-        self.__incomplete = incomplete
-        self.__complete = complete
+        self.coDomain = coDomain
+        self.coId = coId
+        self.predId = predId
+        self.incomplete = incomplete
+        self.complete = complete
 
-    def toDict(self) -> dict:
-        return {
-            "coDomain": self.__coDomain,
-            "coId": self.__coId,
-            "predId": self.__predId,
-            "incomplete": self.__incomplete,
-            "complete": self.__complete}
-    
+    @final
     def toJson(self) -> str:
-        return json.dumps(self.toDict())
-        # return json.dumps(self, default=lambda o: o.__dict__)
+        return json.dumps(self, default=lambda o: o.__dict__)
     
     @staticmethod
     def fromJson(encoding: str) -> PredicateAssessmentReport:

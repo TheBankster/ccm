@@ -1,5 +1,45 @@
 # Predicates unit tests
 
+import json
+from predicates import PredicateAssessmentReport as PAR
+from controlobjectives import ControlObjectiveDomain as COD
+from controlprocedures import ControlProcedureAssessmentResult as CPAR
+from controlprocedures import ControlProcedureCompletionReport as CPCR
+
+#
+print("PredicateAssessmentReport unit tests")
+#
+
+cpar1 = CPAR(
+    success=True,
+    expected={"key1": 1, "key2": "value2"},
+    actual={"key1": 1, "key2": "value2"})
+cpar3 = CPAR(
+    success=False,
+    expected={"key3": 3, "key4": "value4"},
+    actual={"key3": 4, "key4": "value5"})
+cpcr1 = CPCR(
+    cpId = 1,
+    owner="N702722",
+    result=cpar1)
+cpcr3 = CPCR(
+    cpId = 3,
+    owner="E093722",
+    result=cpar3)
+par = PAR(
+    coDomain=COD.ConfidentialComputingVerifier.value,
+    coId=1,
+    predId=1,
+    incomplete=[2,4],
+    complete={1: cpcr1, 3: cpcr3})
+parJsonStr=par.toJson()
+print(parJsonStr)
+par2 = PAR.fromJson(parJsonStr)
+parJsonStr2 = par2.toJson()
+print(parJsonStr2)
+assert(parJsonStr == parJsonStr2)
+
+"""
 from predicates import Mode, PredicateAssessmentReport
 from VerifierTrustworthinessPredicate import VerifierTrustworthiness as VT
 from utils import GlobalClient, UnitTestStream
@@ -53,3 +93,4 @@ input("Press any key to delete the unit test stream")
 GlobalClient.delete_stream(
     stream_name=UnitTestStream,
     current_version=GlobalClient.get_current_version(stream_name=UnitTestStream))
+"""
