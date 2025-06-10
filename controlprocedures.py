@@ -45,6 +45,8 @@ class ControlProcedureAssessmentResult:
 class ControlProcedureState:
     cpId: int # for sanity checking
     state: dict
+    # Validation policy, if any, can be defined by derived state classes;
+    # it does not belong here despite being part of control procedure state
 
     def __init__(self, cpId: int, state: dict):
         self.cpId = cpId

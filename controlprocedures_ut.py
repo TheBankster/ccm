@@ -1,26 +1,8 @@
 from __future__ import annotations # allows passing class objects to class member functions
 import json
 from typing import final
-from controlprocedures import ControlProcedureAssessmentResult as CPAR
 from controlprocedures import ControlProcedureState
-from controlprocedures import ControlProcedureCompletionReport as CPCR
-
-#
-print("ControlProcedureAssessmentResult unit tests")
-#
-
-cpar = CPAR(
-    success=True,
-    expected={"key1": 1, "key2": "value2"},
-    actual={"key1": 3, "key2": "value4"})
-
-# Validate ControlProcedureAssessment Result JSON (de)serialization
-cparJsonStr = cpar.toJson()
-print(cparJsonStr)
-cpar2 = CPAR.fromJson(cparJsonStr)
-cparJsonStr2 = cpar2.toJson()
-print(cparJsonStr2)
-assert(cparJsonStr == cparJsonStr2)
+from controlprocedures import ControlProcedureAssessmentReport as CPCR
 
 #
 print("ControlProcedureState unit tests")
@@ -46,9 +28,9 @@ scpsBad2 = SampleControlProcedureState(True, "Unhealthy")
 cpar3 = scps.Validate(actual=scpsGood)
 cpar4 = scps.Validate(actual=scpsBad1)
 cpar5 = scps.Validate(actual=scpsBad2)
-print(cpar3.toJson())
-print(cpar4.toJson())
-print(cpar5.toJson())
+assert(cpar3.success == True)
+assert(cpar4.success == False)
+assert(cpar5.success == False)
 
 #
 print("ControlProcedureCompletionReport unit tests")
@@ -57,7 +39,9 @@ print("ControlProcedureCompletionReport unit tests")
 cpcr = CPCR(
     cpId = 0,
     owner="N702722",
-    result=cpar3)
+    expected=cpar3.expected,
+    actual=cpar3.actual,
+    success=cpar3.success)
 
 cpcrJsonStr = cpcr.toJson()
 print(cpcrJsonStr)
