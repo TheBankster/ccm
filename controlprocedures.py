@@ -3,12 +3,12 @@
 #
 
 from __future__ import annotations # allows passing class objects to class member functions
+import re
+import json
+from typing import final
 from eventtypes import ControlProcedureCompleted
 from esdbclient import NewEvent, StreamState
 from utils import GlobalClient
-from typing import final
-import re
-import json
 
 def ControlProcedureIdentifier(cpid: int) -> str:
     ControlProcedurePrefix = "CP-"
@@ -74,7 +74,7 @@ class ControlProcedureState:
     @final
     def Validate(self, actual: ControlProcedureState) -> ControlProcedureAssessmentResult:
         if self.cpId != actual.cpId:
-            raise ValueError("cpId mismatch: " + self.CpId() + " vs " + state.CpId())
+            raise ValueError("cpId mismatch: " + self.CpId() + " vs " + actual.CpId())
         return ControlProcedureAssessmentResult(
             success=self.Compare(actual),
             expected=self.state,

@@ -1,21 +1,17 @@
-from __future__ import annotations # allows passing class objects to class member functions
-from esdbclient import NewEvent, StreamState
-from enum import Enum
-from controlprocedures import ControlProcedureCompletionReport
-from controlobjectives import ControlObjectiveDomain
-from eventtypes import PredicateAssessed
-from typing import List, final
-from utils import GlobalClient
-import json
-
 #
 # Predicate Helpers
 #
 
-class AssessmentIndicator(Enum):
-    Unknown = -1
-    Failed = 0
-    Succeeded = 1
+from __future__ import annotations # allows passing class objects to class member functions
+from assessmentindicator import AssessmentIndicator
+from esdbclient import NewEvent, StreamState
+from enum import Enum
+from controlprocedures import ControlProcedureCompletionReport
+from controlobjectiveenums import ControlObjectiveDomain
+from eventtypes import PredicateAssessed
+from typing import final
+from utils import GlobalClient
+import json
 
 class Mode(Enum):
     SaaS = 0
@@ -29,15 +25,17 @@ class PredicateAssessmentReport:
     coDomain: int
     coId: int
     predId: int
-    incomplete: List[int]
+    incomplete: list[int]
     complete: dict[int, ControlProcedureCompletionReport]
+    success: bool
 
-    def __init__(self, coDomain: int, coId: int, predId: int, incomplete: List[int], complete: dict[int, ControlProcedureCompletionReport]):
+    def __init__(self, coDomain: int, coId: int, predId: int, incomplete: list[int], complete: dict[int, ControlProcedureCompletionReport], success: bool):
         self.coDomain = coDomain
         self.coId = coId
         self.predId = predId
         self.incomplete = incomplete
         self.complete = complete
+        self.success = success
 
     @final
     def toJson(self) -> str:
@@ -51,17 +49,18 @@ class PredicateAssessmentReport:
             coId=decoding["coId"],
             predId=decoding["predId"],
             incomplete=decoding["incomplete"],
-            complete=decoding["complete"])
+            complete=decoding["complete"],
+            success=decoding["success"])
 
 class Predicate:
     __coDomain: ControlObjectiveDomain
     __coId: int
     __predId: int
     __stream: str
-    __incomplete: List[int]
     __complete: dict[int, ControlProcedureCompletionReport]
+    __incomplete: list[int]
 
-    def __init__(self, coDomain: int, coId: int, predId: int, stream: int, cpIds: List[int]):
+    def __init__(self, coDomain: int, coId: int, predId: int, stream: int, cpIds: list[int]):
         self.__coDomain = coDomain
         self.__coId = coId
         self.__predId = predId
@@ -77,6 +76,7 @@ class Predicate:
     #  - Succeeded iff all individual results are Succeeded
     #  - Failed if at least one individual result is Failed
     #  - Unknown otherwise
+    # Derived Predicates can override this to change the behavior
     def PredicateAssessment(self) -> AssessmentIndicator:
         for key in self.__complete.keys():
             value = self.__complete[key]
@@ -103,14 +103,16 @@ class Predicate:
         if cpId in self.__incomplete:
             self.__incomplete.remove(cpId)
         self.__complete[cpId] = completion
-        if self.PredicateAssessment() != AssessmentIndicator.Unknown.value:
+        assessment = self.PredicateAssessment()
+        if assessment != AssessmentIndicator.Unknown.value:
             # The assessment state is no longer unknown: can inform the Control Objective now
             assessmentReport = PredicateAssessmentReport(
                 coDomain=self.__coDomain,
                 coId=self.__coId,
                 predId=self.__predId,
                 incomplete=self.__incomplete,
-                complete=self.__complete)
+                complete=self.__complete,
+                success=(assessment == AssessmentIndicator.Succeeded.value))
             GlobalClient.append_to_stream(
                 stream_name=self.__stream,
                 events=NewEvent(

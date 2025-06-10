@@ -2,30 +2,16 @@
 # Control Objective Helpers
 #
 
+from __future__ import annotations # allows passing class objects to class member functions
 from enum import Enum
-from esdbclient import NewEvent
-from eventtypes import ControlObjectiveAchieved, ControlObjectiveFailed
-
-ControlObjectveDomainNames = ["CCV", "RP"]
-
-class ControlObjectiveDomain(Enum):
-    ConfidentialComputingVerifier = 1
-    ReverseProxy = 2
-
-class VerifierControlObjectives(Enum):
-    VerifierTrustworthiness = 1
-    VerifierAvailabilityAndPerformance = 2
-    VerifierAssetProtection = 3
-    VerifierSORConsiderations = 4
-
-class ReverseProxyControlObjectives(Enum):
-    ReverseProxyTrustworthiness = 1
-    ReverseProxyAvailabilityAndPerformance = 2
-    ReverseProxyRegulatoryCompliance = 3
-    ReverseProxySORConsiderations = 4
-
-def ControlObjectiveDomainName(domain: ControlObjectiveDomain) -> str:
-    return ControlObjectveDomainNames[domain.value - 1]
+from typing import final
+import json
+from assessmentindicator import AssessmentIndicator
+from esdbclient import NewEvent, StreamState
+from controlobjectiveenums import ControlObjectiveDomain
+from eventtypes import ControlObjectiveAssessed
+from predicates import PredicateAssessmentReport
+from utils import GlobalClient
 
 # Control Objective Event Creation
 
@@ -34,11 +20,98 @@ def ControlObjectiveIdentifier(domain: ControlObjectiveDomain, id: int) -> str:
     ControlObjectivePrefix = "CO-"
     return ControlObjectivePrefix + ControlObjectiveDomainName(domain) + "-" + str(id)
 
+class ControlObjectiveAssessmentReport:
+    coDomain: int
+    coId: int
+    incomplete: list[int]
+    complete: dict[int, PredicateAssessmentReport]
 
-def CreateObjectiveAssessedEvent(success: bool, domain: ControlObjectiveDomain, id: int, evidence: str) -> NewEvent:
-    dataString = \
-        "{\"ControlObjectiveID\":\"" + ControlObjectiveIdentifier(domain, id) + "\"," + \
-        "\"Evidence\":\"" + evidence + "\"}"
-    return NewEvent(
-        type = ControlObjectiveAchieved if success else ControlObjectiveFailed,
-        data = dataString.encode('utf-8'))
+    def __init__(self, coDomain: int, coId: int, incomplete: list[int], complete: dict[int, PredicateAssessmentReport], success: bool):
+        self.coDomain = coDomain
+        self.coId = coId
+        self.incomplete = incomplete
+        self.complete = complete
+        self.success = success
+
+    @final
+    def toJson(self) -> str:
+        return json.dumps(self, default=lambda o: o.__dict__)
+    
+    @staticmethod
+    def fromJson(encoding: str) -> ControlObjectiveAssessmentReport:
+        decoding = json.loads(encoding)
+        return PredicateAssessmentReport(
+            coDomain=decoding["coDomain"],
+            coId=decoding["coId"],
+            incomplete=decoding["incomplete"],
+            complete=decoding["complete"],
+            success=decoding["success"])
+
+class ControlObjective:
+    __coDomain: ControlObjectiveDomain
+    __coId: int
+    __stream: str
+    __complete: dict[int, PredicateAssessmentReport]
+    __incomplete: list[int]
+    
+    def __init__(self, coDomain: ControlObjectiveDomain, coId:int, stream: str, predIds: list[int]):
+        self.__coDomain = coDomain
+        self.__coId = coId
+        self.__stream = stream
+        self.__complete = {}
+        self.__incomplete = []
+        for predId in predIds:
+            # Check for duplicates
+            assert not (predId in self.__incomplete)
+            self.__incomplete.append(predId)
+        
+    # A Control Objective is assessed as:
+    #  - Succeeded iff all individual precdicates are Succeeded
+    #  - Failed if at least one individual predicate is Failed
+    #  - Unknown otherwise
+    # Derived Control Objectives can change the behavior
+    def PredicateAssessment(self) -> AssessmentIndicator:
+        for key in self.__complete.keys():
+            value = self.__complete[key]
+            assert isinstance(value, PredicateAssessmentReport)
+            if not value.success:
+                # One Failed -- everything Failed
+                return AssessmentIndicator.Failed
+            else:
+                # Continue iterating; maybe something else Failed
+                continue
+        if len(self.__incomplete) > 0:
+            return AssessmentIndicator.Unknown
+        else:
+            return AssessmentIndicator.Succeeded
+
+    # When a Control Procedure completes, checks to see if Predicate can be assessed (meaning
+    # that either at least CP failed, or all have succeeded) and report that if so
+    def HandleControlProcedureCompletion(self, completion: PredicateAssessmentReport):
+        if (self.__coDomain.value != PredicateAssessmentReport.coDomain) or \
+            (self.__coId != PredicateAssessmentReport.coId):
+            # Predicate does not correspond to this Control Objective
+            return
+        predId = completion.predId
+        if not (predId in self.__incomplete) and \
+            not (predId in self.__complete.keys()):
+            # This is not one of the Predicates this Control Objective is interested in
+            return
+        if predId in self.__incomplete:
+            self.__incomplete.remove(predId)
+        self.__complete[predId] = completion
+        assessment = self.PredicateAssessment()
+        if assessment != AssessmentIndicator.Unknown.value:
+            # The assessment state is no longer unknown: can report Control Objective state now
+            assessmentReport = ControlObjectiveAssessmentReport(
+                coDomain=self.__coDomain,
+                coId=self.__coId,
+                incomplete=self.__incomplete,
+                complete=self.__complete,
+                success=(assessment == AssessmentIndicator.Succeeded.value))
+            GlobalClient.append_to_stream(
+                stream_name=self.__stream,
+                events=NewEvent(
+                    type=ControlObjectiveAssessed,
+                    data=assessmentReport.toJson().encode('utf-8')),
+                    current_version=StreamState.ANY)

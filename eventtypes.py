@@ -1,6 +1,5 @@
 # Control Objective Event Types
-ControlObjectiveAchieved = "ControlObjectiveAchieved"
-ControlObjectiveFailed = "ControlObjectiveFailed"
+ControlObjectiveAssessed = "ControlObjectiveAssessed"
 
 # Predicate Event Types
 PredicateAssessed = "PredicateAssessed"

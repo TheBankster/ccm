@@ -1,10 +1,9 @@
 # Predicates unit tests
 
-import json
-from predicates import PredicateAssessmentReport as PAR
-from controlobjectives import ControlObjectiveDomain as COD
 from controlprocedures import ControlProcedureAssessmentResult as CPAR
 from controlprocedures import ControlProcedureCompletionReport as CPCR
+from predicates import PredicateAssessmentReport as PAR
+from controlobjectiveenums import ControlObjectiveDomain as COD
 
 #
 print("PredicateAssessmentReport unit tests")
@@ -31,7 +30,8 @@ par = PAR(
     coId=1,
     predId=1,
     incomplete=[2,4],
-    complete={1: cpcr1, 3: cpcr3})
+    complete={1: cpcr1, 3: cpcr3},
+    success=True)
 parJsonStr=par.toJson()
 print(parJsonStr)
 par2 = PAR.fromJson(parJsonStr)
@@ -41,6 +41,7 @@ assert(parJsonStr == parJsonStr2)
 
 #
 print("Predicate unit tests")
+#
 
 from predicates import Predicate, Mode
 from utils import GlobalClient, UnitTestStream
