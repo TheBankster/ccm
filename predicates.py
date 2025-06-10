@@ -104,7 +104,7 @@ class Predicate:
             self.__incomplete.remove(cpId)
         self.__complete[cpId] = completion
         assessment = self.PredicateAssessment()
-        if assessment != AssessmentIndicator.Unknown.value:
+        if assessment != AssessmentIndicator.Unknown:
             # The assessment state is no longer unknown: can inform the Control Objective now
             assessmentReport = PredicateAssessmentReport(
                 coDomain=self.__coDomain,
@@ -112,7 +112,7 @@ class Predicate:
                 predId=self.__predId,
                 incomplete=self.__incomplete,
                 complete=self.__complete,
-                success=(assessment == AssessmentIndicator.Succeeded.value))
+                success=(assessment == AssessmentIndicator.Succeeded))
             GlobalClient.append_to_stream(
                 stream_name=self.__stream,
                 events=NewEvent(

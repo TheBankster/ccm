@@ -101,14 +101,14 @@ class ControlObjective:
             self.__incomplete.remove(predId)
         self.__complete[predId] = completion
         assessment = self.PredicateAssessment()
-        if assessment != AssessmentIndicator.Unknown.value:
+        if assessment != AssessmentIndicator.Unknown:
             # The assessment state is no longer unknown: can report Control Objective state now
             assessmentReport = ControlObjectiveAssessmentReport(
                 coDomain=self.__coDomain,
                 coId=self.__coId,
                 incomplete=self.__incomplete,
                 complete=self.__complete,
-                success=(assessment == AssessmentIndicator.Succeeded.value))
+                success=(assessment == AssessmentIndicator.Succeeded))
             GlobalClient.append_to_stream(
                 stream_name=self.__stream,
                 events=NewEvent(
