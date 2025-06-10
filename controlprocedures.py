@@ -6,7 +6,7 @@ from __future__ import annotations # allows passing class objects to class membe
 import re
 import json
 from typing import final
-from eventtypes import ControlProcedureCompleted
+from eventtypes import ControlProcedureAssessed
 from esdbclient import NewEvent, StreamState
 from utils import GlobalClient
 
@@ -124,7 +124,7 @@ class ControlProcedure:
         GlobalClient.append_to_stream(
             stream_name=self.__stream,
             events=NewEvent(
-                type=ControlProcedureCompleted,
+                type=ControlProcedureAssessed,
                 data=completionReport.toJson().encode('utf-8')),
             current_version=StreamState.ANY)
     

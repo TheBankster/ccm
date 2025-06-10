@@ -49,7 +49,7 @@ print("Predicate unit tests")
 
 from predicates import Predicate, Mode
 from utils import GlobalClient, UnitTestStream
-from eventtypes import ControlProcedureCompleted, PredicateAssessed
+from eventtypes import ControlProcedureAssessed, PredicateAssessed
 from cp2 import EndpointIntegrity, EndpointIntegrityState
 from cp4 import SystemMaintenance, SystemMaintenanceState
 from controlobjectives import ControlObjectiveDomain
@@ -99,7 +99,7 @@ cp4.ReportControlProcedureState(reportedState=SystemMaintenanceCompliantState)
 
 subscription = GlobalClient.subscribe_to_stream(stream_name=UnitTestStream)
 for event in subscription:
-    if event.type == ControlProcedureCompleted:
+    if event.type == ControlProcedureAssessed:
         report = ControlProcedureAssessmentReport.fromJson(event.data)
         print("Processing ControlProcedureAssessmentReport: " + report.toJson())
         utp.HandleControlProcedureCompletion(report)

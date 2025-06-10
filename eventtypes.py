@@ -5,4 +5,4 @@ ControlObjectiveAssessed = "ControlObjectiveAssessed"
 PredicateAssessed = "PredicateAssessed"
 
 # Control Procedure Event Type
-ControlProcedureCompleted = "ControlProcedureCompleted"
+ControlProcedureAssessed = "ControlProcedureAssessed"

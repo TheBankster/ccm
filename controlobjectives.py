@@ -8,7 +8,7 @@ from typing import final
 import json
 from assessmentindicator import AssessmentIndicator
 from esdbclient import NewEvent, StreamState
-from controlobjectiveenums import ControlObjectiveDomain
+from controlobjectiveenums import ControlObjectiveDomain, ControlObjectiveDomainName
 from eventtypes import ControlObjectiveAssessed
 from predicates import PredicateAssessmentReport
 from utils import GlobalClient
