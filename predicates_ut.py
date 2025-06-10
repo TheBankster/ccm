@@ -62,16 +62,16 @@ UnitTestModeToControlProcedureIdMapping = [\
     [2, 3]] # Roll Your Own
 
 class UnitTestPredicate(Predicate):
-    def __init__(self, stream: str, mode: Mode):
+    def __init__(self, mode: Mode):
         Predicate.__init__(
             self,
             coDomain=ControlObjectiveDomain.ConfidentialComputingVerifier.value,
             coId=VerifierControlObjectives.VerifierTrustworthiness.value,
             predId=1,
-            stream=stream,
+            stream=UnitTestStream,
             cpIds=UnitTestModeToControlProcedureIdMapping[mode.value])
 
-utp = UnitTestPredicate(stream=UnitTestStream, mode=Mode.Firmwide)
+utp = UnitTestPredicate(mode=Mode.Firmwide)
 
 cp2state = EndpointIntegrityState(secureBoot=True, antimalwareCheck="Healthy")
 cp2 = EndpointIntegrity(
@@ -101,14 +101,11 @@ subscription = GlobalClient.subscribe_to_stream(stream_name=UnitTestStream)
 for event in subscription:
     if event.type == ControlProcedureAssessed:
         report = ControlProcedureAssessmentReport.fromJson(event.data)
-        print("Processing ControlProcedureAssessmentReport: " + report.toJson())
         utp.HandleControlProcedureCompletion(report)
     elif event.type == PredicateAssessed:
         report = PAR.fromJson(event.data)
-        print("Processing PredicateAssessmentReport: " + report.toJson())
     else:
         print("Unrecognized event type: " + event.type)
-
 input("Press any key to delete the unit test stream")
 
 GlobalClient.delete_stream(

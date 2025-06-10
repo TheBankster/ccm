@@ -25,6 +25,7 @@ class ControlObjectiveAssessmentReport:
     coId: int
     incomplete: list[int]
     complete: dict[int, PredicateAssessmentReport]
+    success: bool
 
     def __init__(self, coDomain: int, coId: int, incomplete: list[int], complete: dict[int, PredicateAssessmentReport], success: bool):
         self.coDomain = coDomain
@@ -40,7 +41,7 @@ class ControlObjectiveAssessmentReport:
     @staticmethod
     def fromJson(encoding: str) -> ControlObjectiveAssessmentReport:
         decoding = json.loads(encoding)
-        return PredicateAssessmentReport(
+        return ControlObjectiveAssessmentReport(
             coDomain=decoding["coDomain"],
             coId=decoding["coId"],
             incomplete=decoding["incomplete"],
@@ -48,13 +49,13 @@ class ControlObjectiveAssessmentReport:
             success=decoding["success"])
 
 class ControlObjective:
-    __coDomain: ControlObjectiveDomain
+    __coDomain: int
     __coId: int
     __stream: str
     __complete: dict[int, PredicateAssessmentReport]
     __incomplete: list[int]
     
-    def __init__(self, coDomain: ControlObjectiveDomain, coId:int, stream: str, predIds: list[int]):
+    def __init__(self, coDomain: int, coId:int, stream: str, predIds: list[int]):
         self.__coDomain = coDomain
         self.__coId = coId
         self.__stream = stream
@@ -85,11 +86,11 @@ class ControlObjective:
         else:
             return AssessmentIndicator.Succeeded
 
-    # When a Control Procedure completes, checks to see if Predicate can be assessed (meaning
-    # that either at least CP failed, or all have succeeded) and report that if so
-    def HandleControlProcedureCompletion(self, completion: PredicateAssessmentReport):
-        if (self.__coDomain.value != PredicateAssessmentReport.coDomain) or \
-            (self.__coId != PredicateAssessmentReport.coId):
+    # When a Predicate completes, checks to see if Predicate can be assessed (meaning
+    # that either at least one Predicate failed, or all have succeeded) and report that if so
+    def HandlePredicateCompletion(self, completion: PredicateAssessmentReport):
+        if (self.__coDomain != completion.coDomain) or \
+            (self.__coId != completion.coId):
             # Predicate does not correspond to this Control Objective
             return
         predId = completion.predId
