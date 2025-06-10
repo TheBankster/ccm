@@ -8,8 +8,8 @@ test2 = TEEIsolationState(codeVersion=4, configurationHash=12345)
 test3 = TEEIsolationState(codeVersion=2, configurationHash=23456)
 result2 = test1.Validate(test2)
 result3 = test1.Validate(test3)
-print(result2.isSuccessful(), result2.toJson())
-print(result3.isSuccessful(), result3.toJson())
+assert(result2.success == True)
+assert(result3.success == False)
 
 # Payroll application in Dev environment will have anti-malware but not secure boot
 UnitTestTEEIsolationState = TEEIsolationState(codeVersion=2, configurationHash=34567)

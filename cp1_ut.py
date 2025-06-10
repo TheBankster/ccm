@@ -6,7 +6,7 @@ from utils import UnitTestStream
 test1 = CSPState("Azure", True)
 test2 = CSPState("Azure", False)
 result = test1.Validate(test2)
-print(result.isSuccessful(), result.toJson())
+assert(result.success == False)
 
 # Payroll application in Dev environment will be deployed in Azure
 UnitTestCSPState = CSPState(csp="Azure", soc3=True)

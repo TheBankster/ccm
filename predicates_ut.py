@@ -1,7 +1,7 @@
 # Predicates unit tests
 
-from controlprocedures import ControlProcedureAssessmentResult as CPAR
-from controlprocedures import ControlProcedureCompletionReport as CPCR
+from controlprocedures import ControlProcedureAssessmentResult
+from controlprocedures import ControlProcedureAssessmentReport
 from predicates import PredicateAssessmentReport as PAR
 from controlobjectiveenums import ControlObjectiveDomain as COD
 
@@ -9,29 +9,33 @@ from controlobjectiveenums import ControlObjectiveDomain as COD
 print("PredicateAssessmentReport unit tests")
 #
 
-cpar1 = CPAR(
+result1 = ControlProcedureAssessmentResult(
     success=True,
     expected={"key1": 1, "key2": "value2"},
     actual={"key1": 1, "key2": "value2"})
-cpar3 = CPAR(
+result3 = ControlProcedureAssessmentResult(
     success=False,
     expected={"key3": 3, "key4": "value4"},
     actual={"key3": 4, "key4": "value5"})
-cpcr1 = CPCR(
+report1 = ControlProcedureAssessmentReport(
     cpId = 1,
     owner="N702722",
-    result=cpar1)
-cpcr3 = CPCR(
+    expected=result1.expected,
+    actual=result1.actual,
+    success=result1.success)
+report3 = ControlProcedureAssessmentReport(
     cpId = 3,
     owner="E093722",
-    result=cpar3)
+    expected=result3.expected,
+    actual=result3.actual,
+    success=result3.success)
 par = PAR(
     coDomain=COD.ConfidentialComputingVerifier.value,
     coId=1,
     predId=1,
     incomplete=[2,4],
-    complete={1: cpcr1, 3: cpcr3},
-    success=True)
+    complete={1: report1, 3: report3},
+    success=report1.success and report3.success)
 parJsonStr=par.toJson()
 print(parJsonStr)
 par2 = PAR.fromJson(parJsonStr)
@@ -49,8 +53,8 @@ from eventtypes import ControlProcedureCompleted, PredicateAssessed
 from cp2 import EndpointIntegrity, EndpointIntegrityState
 from cp4 import SystemMaintenance, SystemMaintenanceState
 from controlobjectives import ControlObjectiveDomain
-from controlobjectives import VerifierControlObjectives
-from controlprocedures import ControlProcedureCompletionReport as CPCR
+from controlobjectiveenums import VerifierControlObjectives
+from controlprocedures import ControlProcedureAssessmentReport as ControlProcedureAssessmentReport
 
 UnitTestModeToControlProcedureIdMapping = [\
     [1],    # SaaS
@@ -96,8 +100,8 @@ cp4.ReportControlProcedureState(reportedState=SystemMaintenanceCompliantState)
 subscription = GlobalClient.subscribe_to_stream(stream_name=UnitTestStream)
 for event in subscription:
     if event.type == ControlProcedureCompleted:
-        report = CPCR.fromJson(event.data)
-        print("Processing ControlProcedureCompletionReport: " + report.toJson())
+        report = ControlProcedureAssessmentReport.fromJson(event.data)
+        print("Processing ControlProcedureAssessmentReport: " + report.toJson())
         utp.HandleControlProcedureCompletion(report)
     elif event.type == PredicateAssessed:
         report = PAR.fromJson(event.data)

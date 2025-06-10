@@ -41,22 +41,6 @@ class ControlProcedureAssessmentResult:
         self.expected = expected
         self.actual = actual
 
-    @final
-    def isSuccessful(self) -> bool:
-        return self.success
-    
-    @final
-    def toJson(self) -> str:
-        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
-    
-    @staticmethod
-    def fromJson(encoding: str) -> ControlProcedureAssessmentResult:
-        decoding = json.loads(encoding)
-        return ControlProcedureAssessmentResult(
-            success=decoding["success"],
-            expected=decoding["expected"],
-            actual=decoding["actual"])
-
 # Abstract base class for all derived CP states
 class ControlProcedureState:
     cpId: int # for sanity checking
@@ -83,28 +67,34 @@ class ControlProcedureState:
 def ValidateOwner(owner: str):
     assert re.match(r'^[A-Z]\d{6}$', owner)
 
-class ControlProcedureCompletionReport:
+class ControlProcedureAssessmentReport:
     cpId: int
     owner: str
-    result: ControlProcedureAssessmentResult
+    expected: dict
+    actual: dict
+    success: bool
 
-    def __init__(self, cpId: int, owner: str, result: ControlProcedureAssessmentResult):
+    def __init__(self, cpId: int, owner: str, expected: dict, actual: dict, success: bool):
         self.cpId = cpId
         ValidateOwner(owner)
         self.owner = owner
-        self.result = result
+        self.expected = expected
+        self.actual = actual
+        self.success = success
     
     @final
     def toJson(self) -> str:
         return json.dumps(self.__dict__, default=lambda o: o.__dict__)
     
     @staticmethod
-    def fromJson(encoding: str) -> ControlProcedureCompletionReport:
+    def fromJson(encoding: str) -> ControlProcedureAssessmentReport:
         decoding = json.loads(encoding)
-        return ControlProcedureCompletionReport(
+        return ControlProcedureAssessmentReport(
             cpId=decoding["cpId"],
             owner=decoding["owner"],
-            result=ControlProcedureAssessmentResult.fromJson(json.dumps(decoding["result"])))
+            expected=decoding["expected"],
+            actual=decoding["actual"],
+            success=decoding["success"])
 
 class ControlProcedure:
     __cpId: int
@@ -125,10 +115,12 @@ class ControlProcedure:
         self.__expectedState = newState
         
     def __AppendControlProcedureCompletionEvent(self, assessmentResult: ControlProcedureAssessmentResult):
-        completionReport = ControlProcedureCompletionReport(
+        completionReport = ControlProcedureAssessmentReport(
             cpId=self.__cpId,
             owner=self.__owner,
-            result=assessmentResult)
+            expected=assessmentResult.expected,
+            actual=assessmentResult.actual,
+            success=assessmentResult.success)
         GlobalClient.append_to_stream(
             stream_name=self.__stream,
             events=NewEvent(

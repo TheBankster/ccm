@@ -8,8 +8,8 @@ test2 = EndpointIntegrityState(secureBoot=False, antimalwareCheck="Passed")
 test3 = EndpointIntegrityState(secureBoot=True, antimalwareCheck="Infected with StuxNet")
 result2 = test1.Validate(test2)
 result3 = test1.Validate(test3)
-print(result2.isSuccessful(), result2.toJson())
-print(result3.isSuccessful(), result3.toJson())
+assert(result2.success == False)
+assert(result3.success == False)
 
 # Payroll application in Dev environment will have anti-malware but not secure boot
 UnitTestIntegrityState = EndpointIntegrityState(secureBoot=False, antimalwareCheck="Passed")
