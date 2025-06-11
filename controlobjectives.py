@@ -8,7 +8,6 @@ from typing import final
 import json
 from assessmentindicator import AssessmentIndicator
 from esdbclient import NewEvent, StreamState
-from controlobjectiveenums import ControlObjectiveDomain, ControlObjectiveDomainName
 from eventtypes import ControlObjectiveAssessed
 from predicates import PredicateAssessmentReport
 from utils import GlobalClient
@@ -16,9 +15,9 @@ from utils import GlobalClient
 # Control Objective Event Creation
 
 # e.g. CO-CCV-1
-def ControlObjectiveIdentifier(domain: ControlObjectiveDomain, id: int) -> str:
+def ControlObjectiveIdentifier(domain: int, id: int) -> str:
     ControlObjectivePrefix = "CO-"
-    return ControlObjectivePrefix + ControlObjectiveDomainName(domain) + "-" + str(id)
+    return ControlObjectivePrefix + str(domain) + "-" + str(id)
 
 class ControlObjectiveAssessmentReport:
     coDomain: int
