@@ -13,20 +13,22 @@ from controlobjectives import ControlObjectiveIdentifier as CoId
 from controlobjectives import ControlObjectiveAssessmentReport as COAR
 import threading
 
-class AppControls:
+class AppControls():
     def __init__(
             self,
+            stream: str,
             cps: dict[int, ControlProcedure],
             preds: list[Predicate],
             cos: list[ControlObjective],
             stop: threading.Event):
+        self.__stream = stream
         self.__cps = cps
         self.__preds = preds
         self.__cos = cos
         self.__stop = stop
 
     def AnnounceEventHandling(self, eventname: str):
-         print(self.__appName + " is handling " + str(eventname))
+         print(self.__stream + " is handling " + eventname)
 
     # TODO: add handling for changing CP policy
 
@@ -42,7 +44,7 @@ class AppControls:
             c.HandlePredicateCompletion(completion=report)
         return
 
-    def HandleControlProcedureAssessedEvent(self, report: COAR):
+    def HandleControlObjectiveAssessedEvent(self, report: COAR):
         coId = CoId(report.coDomain, report.coId)
         print("Handling Control Objectve Assessment Report for " + coId)
         print("Control Objective " + coId + ("Succeeded" if report.success else "Failed"))
@@ -54,6 +56,7 @@ class AppControls:
         return
 
     def loop(self):
+        print("Started event processing loop")
         while not self.__stop.is_set():
             with client.subscribe_to_stream(self.__stream) as sub:
                 for event in sub:
@@ -63,7 +66,7 @@ class AppControls:
                     elif event.type == eventtypes.PredicateAssessed:
                         self.HandlePredicateAssessedEvent(PAR.fromJson(event.data))
                     elif event.type == eventtypes.ControlObjectiveAssessed:
-                        self.HandleControlProcedureAssessedEvent(COAR.fromJson(event.data))
+                        self.HandleControlObjectiveAssessedEvent(COAR.fromJson(event.data))
                     else:
                         print("Unrecognized event type: " + event.type)
                         assert(False)

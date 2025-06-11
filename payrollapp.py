@@ -18,17 +18,17 @@ def main(args):
     if (len(sys.argv) != 2):
         print("Usage: payrollapp DeploymentId e.g. payrollapp 1234")
         return
-    stream=DemoStream(App.Payroll, sys.argv[1], Env.DEV)
+    appStream=DemoStream(App.Payroll, sys.argv[1], Env.DEV)
 
     # Create the control estate: CPs, Predicates, COs...
-    cpDict = ReadPolicy(stream, "payroll.config")
-    vtp = vt(stream, Mode.Firmwide)
+    cpDict = ReadPolicy(appStream, "payroll.config")
+    vtp = vt(appStream, Mode.Firmwide)
     preds: list[Predicate] = []
     preds.append(vtp)
     co1 = ControlObjective(
         coDomain=ControlObjectiveDomain.ConfidentialComputingVerifier,
         coId=1,
-        stream=stream,
+        stream=appStream,
         predIds=[vtp.PredId()])
     cos: list[ControlObjective] = []
     cos.append(co1)
@@ -36,13 +36,14 @@ def main(args):
     input("Press any key to start event processing loop:")
 
     stop_event = threading.Event()
-    appControls = AppControls(
+    deployment = AppControls(
+        stream=appStream,
         cps=cpDict,
         preds=preds,
         cos=cos,
         stop=stop_event)
-    deployment=threading.Thread()
-    deployment.start()
+    thread=threading.Thread(target=deployment.loop)
+    thread.start()
 
     input("Press any key to assess exisitng control estate:")
 
@@ -59,7 +60,7 @@ def main(args):
 
     input("Press any key to stop event processing loop and exit:")
     stop_event.set()
-    deployment.join()
+    thread.join()
 
     return
 

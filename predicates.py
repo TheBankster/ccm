@@ -18,8 +18,8 @@ class Mode(Enum):
     Firmwide = 1
     RollYourOwn = 2
 
-def PredicateIdentifier(coDomain: str, coId: int, predId: int) -> str:
-    return coDomain + "-" + str(coId) + "-" + str(predId)
+def PredicateIdentifier(coDomain: int, coId: int, predId: int) -> str:
+    return str(coDomain) + "-" + str(coId) + "-" + str(predId)
 
 class PredicateAssessmentReport:
     coDomain: int

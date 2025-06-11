@@ -28,7 +28,7 @@ def DeploymentStream(app: App, env: Env, unittest: bool = False) -> str:
     return result
 
 def DemoStream(app: App, depId: int, env: Env) -> str:
-    result = app.name + "-" + str(depId) + env.name
+    return(app.name + "-" + str(depId) + "-" + env.name)
 
 GlobalClient = CcmClient()
 
