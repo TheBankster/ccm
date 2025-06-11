@@ -27,6 +27,9 @@ def DeploymentStream(app: App, env: Env, unittest: bool = False) -> str:
         result += "-" + date.today().isoformat()
     return result
 
+def DemoStream(app: App, depId: int, env: Env) -> str:
+    result = app.name + "-" + str(depId) + env.name
+
 GlobalClient = CcmClient()
 
 PayrollDevStream = DeploymentStream(App.Payroll, Env.DEV)

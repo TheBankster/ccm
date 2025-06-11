@@ -11,25 +11,19 @@ from predicates import PredicateAssessmentReport as PAR
 from controlobjectives import ControlObjective
 from controlobjectives import ControlObjectiveIdentifier as CoId
 from controlobjectives import ControlObjectiveAssessmentReport as COAR
+import threading
 
 class AppControls:
-    __appName: str
-    __envName: str
-    __stream: str
-
     def __init__(
             self,
-            app: App,
-            env: Env,
-            cps: list[ControlProcedure],
+            cps: dict[int, ControlProcedure],
             preds: list[Predicate],
-            cos: list[ControlObjective]):
-        self.__appName = app.name
-        self.__envName = env.name
-        self.__stream = DeploymentStream(self.__appName, self.__envName, True)
+            cos: list[ControlObjective],
+            stop: threading.Event):
         self.__cps = cps
         self.__preds = preds
         self.__cos = cos
+        self.__stop = stop
 
     def AnnounceEventHandling(self, eventname: str):
          print(self.__appName + " is handling " + str(eventname))
@@ -60,15 +54,16 @@ class AppControls:
         return
 
     def loop(self):
-        with client.subscribe_to_stream(self.__stream) as sub:
-            for event in sub:
-                self.AnnounceEventHandling(event.type)
-                if event.type == eventtypes.ControlProcedureAssessed:
-                    self.HandleControlProcedureAssessedEvent(CPAR.fromJson(event.data))
-                elif event.type == eventtypes.PredicateAssessed:
-                    self.HandlePredicateAssessedEvent(PAR.fromJson(event.data))
-                elif event.type == eventtypes.ControlObjectiveAssessed:
-                    self.HandleControlProcedureAssessedEvent(COAR.fromJson(event.data))
-                else:
-                    assert(False)
-                    print("Unrecognized event type: " + event.type)
+        while not self.__stop.is_set():
+            with client.subscribe_to_stream(self.__stream) as sub:
+                for event in sub:
+                    self.AnnounceEventHandling(event.type)
+                    if event.type == eventtypes.ControlProcedureAssessed:
+                        self.HandleControlProcedureAssessedEvent(CPAR.fromJson(event.data))
+                    elif event.type == eventtypes.PredicateAssessed:
+                        self.HandlePredicateAssessedEvent(PAR.fromJson(event.data))
+                    elif event.type == eventtypes.ControlObjectiveAssessed:
+                        self.HandleControlProcedureAssessedEvent(COAR.fromJson(event.data))
+                    else:
+                        print("Unrecognized event type: " + event.type)
+                        assert(False)

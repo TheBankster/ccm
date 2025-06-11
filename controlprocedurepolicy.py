@@ -6,8 +6,8 @@ from cp4 import SystemMaintenance
 import json
 from readconfig import GetPositiveInt
 
-def ReadPolicy(stream: str, filename: str) -> list[ControlProcedure]:
-    result: list[ControlProcedure] = []
+def ReadPolicy(stream: str, filename: str) -> dict[int, ControlProcedure]:
+    result: dict[int, ControlProcedure] = {}
     with open(filename, 'r') as file:
         lines = file.readlines()
         for l in lines:
@@ -15,13 +15,13 @@ def ReadPolicy(stream: str, filename: str) -> list[ControlProcedure]:
             cpId = GetPositiveInt(entry, "cpId")
             match cpId:
                 case 1:
-                    result.append(ContractualAgreementWithCSP(stream, entry))
+                    result[1] = ContractualAgreementWithCSP(stream, entry)
                 case 2:
-                    result.append(EndpointIntegrity(stream, entry))
+                    result[2] = EndpointIntegrity(stream, entry)
                 case 3:
-                    result.append(TEEIsolation(stream, entry))
+                    result[3] = TEEIsolation(stream, entry)
                 case 4:
-                    result.append(SystemMaintenance(stream, entry))
+                    result[4] = SystemMaintenance(stream, entry)
                 case _:
                     raise ValueError("Unexpected CpId")
     return result

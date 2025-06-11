@@ -1,6 +1,5 @@
-from predicates import Predicate, Mode, AssessmentIndicator
-from controlobjectives import ControlObjectiveDomain, VerifierControlObjectives
-from enum import Enum
+from predicates import Predicate, Mode
+from controlobjectiveenums import ControlObjectiveDomain, VerifierControlObjectives
 
 VerifierTrustworthinessModeToControlProcedureIdMapping = [\
     [1],    # SaaS
@@ -16,3 +15,4 @@ class VerifierTrustworthiness(Predicate):
             predId=1,
             stream=stream,
             cpIds=VerifierTrustworthinessModeToControlProcedureIdMapping[mode.value])
+

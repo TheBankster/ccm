@@ -120,3 +120,5 @@ class Predicate:
                     data=assessmentReport.toJson().encode('utf-8')),
                     current_version=StreamState.ANY)
 
+    def PredId(self):
+        return self.__predId
