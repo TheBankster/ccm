@@ -25,11 +25,11 @@ class ContractualAgreementWithCSP(ControlProcedure):
         cpId = GetIntInRange(encoding, "cpId", ControlProcedureId, ControlProcedureId)
         owner = GetNonEmptyString(encoding, "owner")
         expected = GetDict(encoding, "expected")
-        GetNonEmptyString(expected, "CSP")
-        GetBool(expected, "SOC3")
         ControlProcedure.__init__(
             self,
             cpId,
             stream,
             owner,
-            expected)
+            CSPState(
+                csp=GetNonEmptyString(expected, "CSP"),
+                soc3=GetBool(expected, "SOC3")))

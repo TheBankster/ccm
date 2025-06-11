@@ -25,11 +25,11 @@ class SystemMaintenance(ControlProcedure):
         cpId = GetIntInRange(encoding, "cpId", ControlProcedureId, ControlProcedureId)
         owner = GetNonEmptyString(encoding, "owner")
         expected = GetDict(encoding, "expected")
-        GetBool(expected, "RecentlyPatched")
-        GetBool(expected, "LeastPrivilege")
         ControlProcedure.__init__(
             self,
             cpId,
             stream,
             owner,
-            expected)
+            SystemMaintenanceState(
+                recentlyPatched=GetBool(expected, "RecentlyPatched"),
+                leastPrivilege=GetBool(expected, "LeastPrivilege")))

@@ -25,11 +25,11 @@ class EndpointIntegrity(ControlProcedure):
         cpId = GetIntInRange(encoding, "cpId", ControlProcedureId, ControlProcedureId)
         owner = GetNonEmptyString(encoding, "owner")
         expected = GetDict(encoding, "expected")
-        GetBool(expected, "SecureBoot")
-        GetNonEmptyString(expected, "AntiMalwareCheck")
         ControlProcedure.__init__(
             self,
             cpId,
             stream,
             owner,
-            expected)
+            EndpointIntegrityState(
+                secureBoot=GetBool(expected, "SecureBoot"),
+                antimalwareCheck=GetNonEmptyString(expected, "AntiMalwareCheck")))

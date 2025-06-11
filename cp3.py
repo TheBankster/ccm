@@ -25,11 +25,11 @@ class TEEIsolation(ControlProcedure):
         cpId = GetIntInRange(encoding, "cpId", ControlProcedureId, ControlProcedureId)
         owner = GetNonEmptyString(encoding, "owner")
         expected = GetDict(encoding, "expected")
-        GetIntInRange(expected, "CodeVersion", 1, 65536)
-        GetPositiveInt(expected, "ConfigurationHash")
         ControlProcedure.__init__(
             self,
             cpId,
             stream,
             owner,
-            expected)
+            TEEIsolationState(
+                codeVersion=GetIntInRange(expected, "CodeVersion", 1, 65536),
+                configurationHash=GetPositiveInt(expected, "ConfigurationHash")))
