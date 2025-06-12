@@ -1,7 +1,7 @@
 from applications import App
 from environments import Env
 import eventtypes
-from utils import GlobalClient as client, DeploymentStream
+from utils import GlobalClient as client, trace
 from controlprocedures import ControlProcedure
 from controlprocedures import ControlProcedureIdentifier as CpId
 from controlprocedures import ControlProcedureAssessmentReport as CPAR
@@ -14,6 +14,10 @@ from controlobjectives import ControlObjectiveAssessmentReport as COAR
 import threading
 
 class AppControls():
+    __cps: dict[int, ControlProcedure] = {}
+    __preds: list[Predicate] = []
+    __cos: list[ControlObjective] = []
+
     def __init__(
             self,
             stream: str,
@@ -28,26 +32,28 @@ class AppControls():
         self.__stop = stop
 
     def AnnounceEventHandling(self, eventname: str):
-         print(self.__stream + " is handling " + eventname)
+        trace(self.__stream + " stream is handling " + eventname + " event")
 
     # TODO: add handling for changing CP policy
 
     def HandleControlProcedureAssessedEvent(self, report: CPAR):
-        print("Handilng Control Procedure Assessment Report for " + CpId(report.cpId))
+        trace("Handilng Control Procedure Assessment Report for " + CpId(report.cpId))
+        trace("Control Procedure " + CpId(report.cpId) + (" Succeeded" if report.success else " Failed"))
         for p in self.__preds:
+            trace("Handing off handling of " + CpId(report.cpId) + " assessment report to Predicate " + p.Identifier())
             p.HandleControlProcedureCompletion(completion=report)
         return
 
     def HandlePredicateAssessedEvent(self, report: PAR):
-        print("Handling Predicate Assessment Report for " + PrId(report.coDomain, report.coId, report.predId))
+        trace("Handling Predicate Assessment Report for " + report.PredicateIdentifier())
         for c in self.__cos:
             c.HandlePredicateCompletion(completion=report)
         return
 
     def HandleControlObjectiveAssessedEvent(self, report: COAR):
         coId = CoId(report.coDomain, report.coId)
-        print("Handling Control Objectve Assessment Report for " + coId)
-        print("Control Objective " + coId + ("Succeeded" if report.success else "Failed"))
+        trace("Handling Control Objectve Assessment Report for " + coId)
+        print("Control Objective " + coId + (" Succeeded" if report.success else " Failed"))
         if (not report.success):
             # TODO: print out reasons for failure
             # TODO: send an event alerting failed CP owners

@@ -5,16 +5,26 @@ from applications import App
 from environments import Env
 from datetime import date
 import time
+import configparser
 
 # Connection
 
 DefaultHost = "localhost"
 DefaultPort = "2113"
 
-def KurrentUri(host = DefaultHost, port = DefaultPort):
-    return "esdb://" + host + ":" + port + "?tls=false"
+KurrentHost: str = DefaultHost
+KurrentPort: int = DefaultPort
 
-def CcmClient(host = DefaultHost, port = DefaultPort):
+Tracing: bool = True
+
+def trace(str):
+    if Tracing:
+        print(str)
+
+def KurrentUri(host: str = DefaultHost, port: int = DefaultPort):
+    return "esdb://" + host + ":" + str(port) + "?tls=false"
+
+def CcmClient(host = KurrentHost, port = KurrentPort):
     return EventStoreDBClient(KurrentUri(host, port))
 
 def DeploymentStream(app: App, env: Env, unittest: bool = False) -> str:
@@ -30,7 +40,18 @@ def DeploymentStream(app: App, env: Env, unittest: bool = False) -> str:
 def DemoStream(app: App, depId: int, env: Env) -> str:
     return(app.name + "-" + str(depId) + "-" + env.name)
 
-GlobalClient = CcmClient()
+def LoadConfig(configFile: str):
+    config = configparser.ConfigParser()
+    config.read(configFile)
+
+    KurrentHost = config['settings'].get('host', DefaultHost)
+    KurrentPort = config['settings'].getint('port', DefaultPort)
+    Tracing = config['settings'].getboolean('tracing', False)
+    print("Tracing is: " + str(Tracing))
+    trace("Tracing turned on")
+    GlobalClient = CcmClient(KurrentHost, KurrentPort)
+
+GlobalClient = CcmClient(KurrentHost, KurrentPort)
 
 PayrollDevStream = DeploymentStream(App.Payroll, Env.DEV)
 TimecardProdStream = DeploymentStream(App.Timecard, Env.PROD)

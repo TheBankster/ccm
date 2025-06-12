@@ -135,3 +135,6 @@ class ControlProcedure:
     
     def ReportControlProcedureState(self, reportedState: ControlProcedureState):
         self.__AppendControlProcedureCompletionEvent(self.AssessControlProcedureState(reportedState))
+
+    def Identifier(self) -> str:
+        return ControlProcedureIdentifier(self.__cpId)

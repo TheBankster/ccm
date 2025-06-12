@@ -1,7 +1,7 @@
 # Payroll application for demo
 
 from controlprocedurepolicy import ReadPolicy, ReadActual
-from utils import DemoStream
+from utils import DemoStream, LoadConfig
 import sys
 from applications import App
 from environments import Env
@@ -14,6 +14,8 @@ import threading
 from appdeployment import AppControls
 
 def main(args):
+    LoadConfig('payroll.config')
+
     cpDict: dict[int, ControlProcedure]
     if (len(sys.argv) != 2):
         print("Usage: payrollapp DeploymentId e.g. payrollapp 1234")
@@ -45,7 +47,7 @@ def main(args):
     thread=threading.Thread(target=deployment.loop)
     thread.start()
 
-    print("--- Assessing existing control estate ---")
+    input("--- Press any key to assess existing control estate ---")
 
     actualDict = ReadActual(filename="payroll.actual")
     for key in actualDict.keys():
@@ -54,11 +56,15 @@ def main(args):
         cp.ReportControlProcedureState(actualState)
 
     print("--- Existing control estate assessed ---")
+    input("--- Press any key to update control estate with fixes and re-assess ---")
 
-    # input("Press any key to update control assessments:")
+    fixedDict = ReadActual(filenae="payroll.fixed")
+    for key in fixedDict.keys():
+        cp: ControlProcedure = cpDict[key]
+        fixedState: ControlProcedureState = fixedDict[key]
+        cp.ReportControlProcedureState(fixedState)
 
-
-    # input("Press any key to roll out new policy and see the impact:")
+    # input("Press any key to roll out a new policy and see the impact:")
 
     input("Press any key to stop event processing loop and exit:")
     stop_event.set()

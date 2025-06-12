@@ -9,15 +9,16 @@ import json
 from assessmentindicator import AssessmentIndicator
 from esdbclient import NewEvent, StreamState
 from eventtypes import ControlObjectiveAssessed
+from controlobjectiveenums import ControlObjectveDomainNames
 from predicates import PredicateAssessmentReport
-from utils import GlobalClient
+from utils import GlobalClient, trace
 
 # Control Objective Event Creation
 
 # e.g. CO-CCV-1
 def ControlObjectiveIdentifier(domain: int, id: int) -> str:
     ControlObjectivePrefix = "CO-"
-    return ControlObjectivePrefix + str(domain) + "-" + str(id)
+    return ControlObjectivePrefix + ControlObjectveDomainNames[domain-1] + "-" + str(id)
 
 class ControlObjectiveAssessmentReport:
     coDomain: int
@@ -88,24 +89,25 @@ class ControlObjective:
     # When a Predicate completes, checks to see if Predicate can be assessed (meaning
     # that either at least one Predicate failed, or all have succeeded) and report that if so
     def HandlePredicateCompletion(self, completion: PredicateAssessmentReport):
+        trace("Control Objective " + self.Identifier() + " handling completion of Predicate " + completion.PredicateIdentifier())
         if (self.__coDomain != completion.coDomain) or \
             (self.__coId != completion.coId):
-            print("CO/Domain mismatch -- skipping")
             # Predicate does not correspond to this Control Objective
+            trace("  CO/Domain mismatch -- skipping")
             return
         predId = completion.predId
         if not (predId in self.__incomplete) and \
             not (predId in self.__complete.keys()):
-            print("predId mismatch: skipping")
             # This is not one of the Predicates this Control Objective is interested in
+            trace("  predId " + str(predId) + " not in scope: skipping")
             return
         if predId in self.__incomplete:
             self.__incomplete.remove(predId)
         self.__complete[predId] = completion
-        print("predId match -- assessing")
+        trace("  predId " + str(predId) + " match -- assessing")
         assessment = self.ControlObjectiveAssessment()
         if assessment != AssessmentIndicator.Unknown:
-            print("assessment known: " + assessment.name)
+            trace("  assessment known: " + assessment.name + "; filing Control Objective assessment report")
             # The assessment state is no longer unknown: can report Control Objective state now
             assessmentReport = ControlObjectiveAssessmentReport(
                 coDomain=self.__coDomain,
@@ -119,3 +121,6 @@ class ControlObjective:
                     type=ControlObjectiveAssessed,
                     data=assessmentReport.toJson().encode('utf-8')),
                     current_version=StreamState.ANY)
+            
+    def Identifier(self) -> str:
+        return ControlObjectiveIdentifier(self.__coDomain, self.__coId)

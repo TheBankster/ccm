@@ -6,11 +6,11 @@ from __future__ import annotations # allows passing class objects to class membe
 from assessmentindicator import AssessmentIndicator
 from esdbclient import NewEvent, StreamState
 from enum import Enum
-from controlprocedures import ControlProcedureAssessmentReport
-from controlobjectiveenums import ControlObjectiveDomain
+from controlprocedures import ControlProcedureAssessmentReport, ControlProcedureIdentifier
+from controlobjectiveenums import ControlObjectiveDomain, ControlObjectveDomainNames
 from eventtypes import PredicateAssessed
 from typing import final
-from utils import GlobalClient
+from utils import GlobalClient, trace
 import json
 
 class Mode(Enum):
@@ -19,7 +19,7 @@ class Mode(Enum):
     RollYourOwn = 2
 
 def PredicateIdentifier(coDomain: int, coId: int, predId: int) -> str:
-    return str(coDomain) + "-" + str(coId) + "-" + str(predId)
+    return ControlObjectveDomainNames[coDomain-1] + "-" + str(coId) + "-" + str(predId)
 
 class PredicateAssessmentReport:
     coDomain: int
@@ -51,6 +51,9 @@ class PredicateAssessmentReport:
             incomplete=decoding["incomplete"],
             complete=decoding["complete"],
             success=decoding["success"])
+    
+    def PredicateIdentifier(self) -> str:
+        return PredicateIdentifier(self.coDomain, self.coId, self.predId)
 
 class Predicate:
     __coDomain: ControlObjectiveDomain
@@ -96,15 +99,19 @@ class Predicate:
     # that either at least CP failed, or all have succeeded) and report that if so
     def HandleControlProcedureCompletion(self, completion: ControlProcedureAssessmentReport):
         cpId = completion.cpId
+        trace("Predicate " + self.Identifier() + " handling completion of Control Procedure " + ControlProcedureIdentifier(cpId))
         if not (cpId in self.__incomplete) and \
             not (cpId in self.__complete.keys()):
             # This is not one of the Control Procedures this Predicate is interested in
+            trace("  cpId " + ControlProcedureIdentifier(cpId) + " not in scope: skipping")
             return
         if cpId in self.__incomplete:
             self.__incomplete.remove(cpId)
         self.__complete[cpId] = completion
+        trace("  cpId " + ControlProcedureIdentifier(cpId) + " match -- assessing")
         assessment = self.PredicateAssessment()
         if assessment != AssessmentIndicator.Unknown:
+            trace("  assessment known: " + assessment.name + "; filing Predicate assessment report")
             # The assessment state is no longer unknown: can inform the Control Objective now
             assessmentReport = PredicateAssessmentReport(
                 coDomain=self.__coDomain,
@@ -120,5 +127,8 @@ class Predicate:
                     data=assessmentReport.toJson().encode('utf-8')),
                     current_version=StreamState.ANY)
 
-    def PredId(self):
+    def PredId(self) -> int:
         return self.__predId
+
+    def Identifier(self) -> str:
+        return PredicateIdentifier(self.__coDomain, self.__coId, self.__predId)
