@@ -21,7 +21,7 @@ def main(args):
     appStream=DemoStream(App.Payroll, sys.argv[1], Env.DEV)
 
     # Create the control estate: CPs, Predicates, COs...
-    cpDict = ReadPolicy(appStream, "payroll.config")
+    cpDict = ReadPolicy(appStream, "payroll.expected")
     vtp = vt(appStream, Mode.Firmwide)
     preds: list[Predicate] = []
     preds.append(vtp)
