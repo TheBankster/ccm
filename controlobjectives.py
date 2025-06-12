@@ -70,7 +70,7 @@ class ControlObjective:
     #  - Failed if at least one individual predicate is Failed
     #  - Unknown otherwise
     # Derived Control Objectives can change the behavior
-    def PredicateAssessment(self) -> AssessmentIndicator:
+    def ControlObjectiveAssessment(self) -> AssessmentIndicator:
         for key in self.__complete.keys():
             value = self.__complete[key]
             assert isinstance(value, PredicateAssessmentReport)
@@ -90,18 +90,22 @@ class ControlObjective:
     def HandlePredicateCompletion(self, completion: PredicateAssessmentReport):
         if (self.__coDomain != completion.coDomain) or \
             (self.__coId != completion.coId):
+            print("CO/Domain mismatch -- skipping")
             # Predicate does not correspond to this Control Objective
             return
         predId = completion.predId
         if not (predId in self.__incomplete) and \
             not (predId in self.__complete.keys()):
+            print("predId mismatch: skipping")
             # This is not one of the Predicates this Control Objective is interested in
             return
         if predId in self.__incomplete:
             self.__incomplete.remove(predId)
         self.__complete[predId] = completion
-        assessment = self.PredicateAssessment()
+        print("predId match -- assessing")
+        assessment = self.ControlObjectiveAssessment()
         if assessment != AssessmentIndicator.Unknown:
+            print("assessment known: " + assessment.name)
             # The assessment state is no longer unknown: can report Control Objective state now
             assessmentReport = ControlObjectiveAssessmentReport(
                 coDomain=self.__coDomain,

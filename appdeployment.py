@@ -56,7 +56,7 @@ class AppControls():
         return
 
     def loop(self):
-        print("Started event processing loop")
+        print("--- Started event processing loop ---")
         while not self.__stop.is_set():
             with client.subscribe_to_stream(self.__stream) as sub:
                 for event in sub:

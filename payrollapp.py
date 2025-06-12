@@ -26,14 +26,14 @@ def main(args):
     preds: list[Predicate] = []
     preds.append(vtp)
     co1 = ControlObjective(
-        coDomain=ControlObjectiveDomain.ConfidentialComputingVerifier,
+        coDomain=ControlObjectiveDomain.ConfidentialComputingVerifier.value,
         coId=1,
         stream=appStream,
         predIds=[vtp.PredId()])
     cos: list[ControlObjective] = []
     cos.append(co1)
 
-    input("Press any key to start event processing loop:")
+    print("--- Starting event processing loop ---")
 
     stop_event = threading.Event()
     deployment = AppControls(
@@ -45,7 +45,7 @@ def main(args):
     thread=threading.Thread(target=deployment.loop)
     thread.start()
 
-    input("Press any key to assess exisitng control estate:")
+    print("--- Assessing existing control estate ---")
 
     actualDict = ReadActual(filename="payroll.actual")
     for key in actualDict.keys():
@@ -53,10 +53,12 @@ def main(args):
         actualState: ControlProcedureState = actualDict[key]
         cp.ReportControlProcedureState(actualState)
 
-    input("Press any key to update control assessments:")
+    print("--- Existing control estate assessed ---")
+
+    # input("Press any key to update control assessments:")
 
 
-    input("Press any key to roll out new policy and see the impact:")
+    # input("Press any key to roll out new policy and see the impact:")
 
     input("Press any key to stop event processing loop and exit:")
     stop_event.set()
