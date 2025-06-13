@@ -20,15 +20,8 @@ def AnnounceEventHandling(stream: str, eventname: str) -> None:
 
 def GetFailingCpsAndOwnersWithEvidence(report: COAR) -> dict[int, tuple[str, dict, dict]]:
     d: dict[int, tuple[str, str, str]] = {}
-    #print("========================================")
-    #print("Length of report.complete: " + str(len(report.complete)))
-    #print("Type of report.complete: " + str(type(report.complete)))
-    #print("Report.complete: " + json.dumps(report.complete))
-    #print("Report.complete[\"1\"]: " + json.dumps(report.complete["1"]))
-    #print("========================================")
     for predkey in report.complete.keys():
         prar = report.complete[predkey]
-        #print(json.dumps(prar))
         if not prar["success"]:
             for cpkey in prar["complete"].keys():
                 cpar = prar["complete"][cpkey]
