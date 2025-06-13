@@ -2,7 +2,7 @@ from applications import App
 from environments import Env
 import eventtypes
 from utils import GlobalClient as client, trace
-from controlprocedures import ControlProcedure, ControlProcedureState
+from controlprocedures import ControlProcedure
 from controlprocedures import ControlProcedureIdentifier as CpId
 from controlprocedures import ControlProcedureAssessmentReport as CPAR
 from predicates import Predicate
@@ -13,9 +13,39 @@ from controlobjectives import ControlObjectiveIdentifier as CoId
 from controlobjectives import ControlObjectiveAssessmentReport as COAR
 from controlprocedurepolicy import ControlProcedureUpdateReport, ControlProcedureFromUpdateReport
 import threading
+import json
 
 def AnnounceEventHandling(stream: str, eventname: str) -> None:
     trace(stream + " stream is handling " + eventname + " event")
+
+def GetFailingCpsAndOwnersWithEvidence(report: COAR) -> dict[int, tuple[str, dict, dict]]:
+    d: dict[int, tuple[str, str, str]] = {}
+    #print("========================================")
+    #print("Length of report.complete: " + str(len(report.complete)))
+    #print("Type of report.complete: " + str(type(report.complete)))
+    #print("Report.complete: " + json.dumps(report.complete))
+    #print("Report.complete[\"1\"]: " + json.dumps(report.complete["1"]))
+    #print("========================================")
+    for predkey in report.complete.keys():
+        prar = report.complete[predkey]
+        #print(json.dumps(prar))
+        if not prar["success"]:
+            for cpkey in prar["complete"].keys():
+                cpar = prar["complete"][cpkey]
+                if not cpar["success"]:
+                    d[cpar["cpId"]] = (cpar["owner"], cpar["expected"], cpar["actual"])
+    assert(len(d) > 0)
+    return d    
+
+def DisplayReasonForCoFailure(report: COAR) -> None:
+    assert(not report.success)
+    print("Control Objective " + CoId(report.coDomain, report.coId) + " Failed:")
+    print("Reason(s):")
+    reasons = GetFailingCpsAndOwnersWithEvidence(report)
+    for cpid in reasons.keys():
+        reason = reasons[cpid]
+        print("    " + CpId(cpid) + " owned by " + reason[0] + " expected: " + json.dumps(reason[1]) + " actual: " + json.dumps(reason[2]))
+    return
 
 class AppControls():
     __controlStream: str
@@ -38,25 +68,21 @@ class AppControls():
         AnnounceEventHandling(self.__controlStream, eventname)
 
     def HandleControlProcedureAssessedEvent(self, report: CPAR) -> None:
-        trace("Handilng Control Procedure Assessment Report for " + CpId(report.cpId))
-        trace("Control Procedure " + CpId(report.cpId) + (" Succeeded" if report.success else " Failed"))
         for p in self.__preds:
-            trace("Handing off handling of " + CpId(report.cpId) + " assessment report to Predicate " + p.Identifier())
             p.HandleControlProcedureCompletion(completion=report)
         return
 
     def HandlePredicateAssessedEvent(self, report: PRAR) -> None:
-        trace("Handling Predicate Assessment Report for " + report.PredicateIdentifier())
         for c in self.__cos:
             c.HandlePredicateCompletion(completion=report)
         return
 
     def HandleControlObjectiveAssessedEvent(self, report: COAR) -> None:
         coId = CoId(report.coDomain, report.coId)
-        trace("Handling Control Objectve Assessment Report for " + coId)
-        print("Control Objective " + coId + (" Succeeded" if report.success else " Failed"))
-        if (not report.success):
-            # TODO: print out reasons for failure
+        if report.success:
+            print("Control Objective " + coId + " Succeeded")
+        else:
+            DisplayReasonForCoFailure(report)
             # TODO: send an event alerting failed CP owners
             # TODO: track time to getting offending CPs fixed
             pass
@@ -69,11 +95,11 @@ class AppControls():
                 for event in sub:
                     self.AnnounceEventHandling(event.type)
                     if event.type == eventtypes.ControlProcedureAssessed:
-                        self.HandleControlProcedureAssessedEvent(report=CPAR.fromJson(event.data))
+                        self.HandleControlProcedureAssessedEvent(report=CPAR(**json.loads(event.data)))
                     elif event.type == eventtypes.PredicateAssessed:
-                        self.HandlePredicateAssessedEvent(report=PRAR.fromJson(event.data))
+                        self.HandlePredicateAssessedEvent(report=PRAR(**json.loads(event.data)))
                     elif event.type == eventtypes.ControlObjectiveAssessed:
-                        self.HandleControlObjectiveAssessedEvent(report=COAR.fromJson(event.data))
+                        self.HandleControlObjectiveAssessedEvent(report=COAR(**json.loads(event.data)))
                     else:
                         trace("Unrecognized event type: " + event.type)
                         assert(False)
@@ -117,7 +143,7 @@ class AppPolicies():
                 for event in sub:
                     self.AnnounceEventHandling(event.type)
                     if event.type == eventtypes.ControlProcedureUpdated:
-                        report = ControlProcedureUpdateReport.fromJson(event.data)
+                        report = ControlProcedureUpdateReport(**json.loads(event.data))
                         self.HandleControlProcedureUpdatedEvent(report)
         print("--- Stopped policy event handling ---")
         return

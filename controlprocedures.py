@@ -87,7 +87,7 @@ class ControlProcedureAssessmentReport:
     @final
     def toJson(self) -> str:
         return json.dumps(self.__dict__, default=lambda o: o.__dict__)
-    
+    """
     @staticmethod
     def fromJson(encoding: str) -> ControlProcedureAssessmentReport:
         decoding = json.loads(encoding)
@@ -97,7 +97,7 @@ class ControlProcedureAssessmentReport:
             expected=decoding["expected"],
             actual=decoding["actual"],
             success=decoding["success"])
-
+    """
 class ControlProcedure:
     __cpId: int
     __stream: str

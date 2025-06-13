@@ -39,8 +39,8 @@ class PredicateAssessmentReport:
 
     @final
     def toJson(self) -> str:
-        return json.dumps(self, default=lambda o: o.__dict__)
-    
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
+    """
     @staticmethod
     def fromJson(encoding: str) -> PredicateAssessmentReport:
         decoding = json.loads(encoding)
@@ -51,7 +51,7 @@ class PredicateAssessmentReport:
             incomplete=decoding["incomplete"],
             complete=decoding["complete"],
             success=decoding["success"])
-    
+    """
     def PredicateIdentifier(self) -> str:
         return PredicateIdentifier(self.coDomain, self.coId, self.predId)
 
