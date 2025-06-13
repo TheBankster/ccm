@@ -14,13 +14,9 @@ class SystemMaintenanceState(ControlProcedureState):
             state={"RecentlyPatched": recentlyPatched, "LeastPrivilege": leastPrivilege})
 
     def Compare(self, actual: SystemMaintenanceState) -> bool:
-        trace("CP4 BEING ASSESSED")
-        trace("Expected: " + json.dumps(self.state))
-        trace("Actual: " + json.dumps(actual.state))
         result = \
             (not self.state["RecentlyPatched"] or actual.state["RecentlyPatched"]) and \
             (not self.state["LeastPrivilege"] or actual.state["LeastPrivilege"])
-        trace("CP4 result: " + str(result))
         return result
 
 class SystemMaintenance(ControlProcedure):

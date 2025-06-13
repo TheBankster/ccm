@@ -14,13 +14,9 @@ class CSPState(ControlProcedureState):
             state={"CSP": csp, "SOC3": soc3})
     
     def Compare(self, actual: CSPState) -> bool:
-        trace("CP1 BEING ASSESSED")
-        trace("Expected: " + json.dumps(self.state))
-        trace("Actual: " + json.dumps(actual.state))
         result = \
             (self.state["CSP"] == actual.state["CSP"]) and \
             (not self.state["SOC3"] or actual.state["SOC3"])
-        trace("CP1 result: " + str(result))
         return result
 
 class ContractualAgreementWithCSP(ControlProcedure):

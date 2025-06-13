@@ -14,13 +14,9 @@ class TEEIsolationState(ControlProcedureState):
             state={"CodeVersion": codeVersion, "ConfigurationHash": configurationHash})
 
     def Compare(self, actual: TEEIsolationState) -> bool:
-        trace("CP3 BEING ASSESSED")
-        trace("Expected: " + json.dumps(self.state))
-        trace("Actual: " + json.dumps(actual.state))
         result = \
             (self.state["CodeVersion"] <= actual.state["CodeVersion"]) and \
             (self.state["ConfigurationHash"] == actual.state["ConfigurationHash"])
-        trace("CP3 result: " + str(result))
         return result
 
 class TEEIsolation(ControlProcedure):
