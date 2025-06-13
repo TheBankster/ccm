@@ -35,10 +35,22 @@ def DeploymentStream(app: App, env: Env, unittest: bool = False) -> str:
         result = app.name + "-" + str(app.value) + "-" + env.name
         # for hackathon each day means different stream names
         result += "-" + date.today().isoformat()
+    trace("DeploymentStream will be " + result)
     return result
 
-def DemoStream(app: App, depId: int, env: Env) -> str:
-    return(app.name + "-" + str(depId) + "-" + env.name)
+# ControlStream carries control assessment events for an application deployment
+def ControlStream(app: App, env: Env, depId: int) -> str:
+    result =app.name + "-" + env.name + "-" + str(depId)
+    trace("ControlStream will be " + result)
+    return result
+
+# PolicyStream carries policy change events for a given environment
+def PolicyStream(env: Env, unittest: bool = False) -> str:
+    result: str = "ControlStream-"+env.name
+    if (unittest):
+        result += str(time.monotonic_ns())
+    trace("PolicyStream will be " + result)
+    return result
 
 def LoadConfig(configFile: str):
     config = configparser.ConfigParser()
@@ -53,6 +65,4 @@ def LoadConfig(configFile: str):
 
 GlobalClient = CcmClient(KurrentHost, KurrentPort)
 
-PayrollDevStream = DeploymentStream(App.Payroll, Env.DEV)
-TimecardProdStream = DeploymentStream(App.Timecard, Env.PROD)
 UnitTestStream = DeploymentStream(App.UnitTest, Env.UAT, unittest=True)

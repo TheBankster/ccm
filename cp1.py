@@ -20,16 +20,3 @@ class CSPState(ControlProcedureState):
 class ContractualAgreementWithCSP(ControlProcedure):
     def __init__(self, stream: str, owner: str, expectedState: CSPState):
         ControlProcedure.__init__(self, ControlProcedureId, stream, owner, expectedState)
-
-    def __init__(self, stream: str, encoding: dict):
-        cpId = GetIntInRange(encoding, "cpId", ControlProcedureId, ControlProcedureId)
-        owner = GetNonEmptyString(encoding, "owner")
-        expected = GetDict(encoding, "expected")
-        ControlProcedure.__init__(
-            self,
-            cpId,
-            stream,
-            owner,
-            CSPState(
-                csp=GetNonEmptyString(expected, "CSP"),
-                soc3=GetBool(expected, "SOC3")))

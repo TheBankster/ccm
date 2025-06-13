@@ -20,16 +20,3 @@ class TEEIsolationState(ControlProcedureState):
 class TEEIsolation(ControlProcedure):
     def __init__(self, stream: str, owner: str, expectedState: TEEIsolationState):
         ControlProcedure.__init__(self, ControlProcedureId, stream, owner, expectedState)
-
-    def __init__(self, stream: str, encoding: dict):
-        cpId = GetIntInRange(encoding, "cpId", ControlProcedureId, ControlProcedureId)
-        owner = GetNonEmptyString(encoding, "owner")
-        expected = GetDict(encoding, "expected")
-        ControlProcedure.__init__(
-            self,
-            cpId,
-            stream,
-            owner,
-            TEEIsolationState(
-                codeVersion=GetIntInRange(expected, "CodeVersion", 1, 65536),
-                configurationHash=GetPositiveInt(expected, "ConfigurationHash")))

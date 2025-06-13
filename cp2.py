@@ -20,16 +20,3 @@ class EndpointIntegrityState(ControlProcedureState):
 class EndpointIntegrity(ControlProcedure):
     def __init__(self, stream: str, owner: str, expectedState: EndpointIntegrityState):
         ControlProcedure.__init__(self, ControlProcedureId, stream, owner, expectedState)
-
-    def __init__(self, stream: str, encoding: dict):
-        cpId = GetIntInRange(encoding, "cpId", ControlProcedureId, ControlProcedureId)
-        owner = GetNonEmptyString(encoding, "owner")
-        expected = GetDict(encoding, "expected")
-        ControlProcedure.__init__(
-            self,
-            cpId,
-            stream,
-            owner,
-            EndpointIntegrityState(
-                secureBoot=GetBool(expected, "SecureBoot"),
-                antimalwareCheck=GetNonEmptyString(expected, "AntiMalwareCheck")))

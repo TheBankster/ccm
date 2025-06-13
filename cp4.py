@@ -20,16 +20,3 @@ class SystemMaintenanceState(ControlProcedureState):
 class SystemMaintenance(ControlProcedure):
     def __init__(self, stream: str, owner: str, expectedState: SystemMaintenanceState):
         ControlProcedure.__init__(self, ControlProcedureId, stream, owner, expectedState)
-
-    def __init__(self, stream: str, encoding: dict):
-        cpId = GetIntInRange(encoding, "cpId", ControlProcedureId, ControlProcedureId)
-        owner = GetNonEmptyString(encoding, "owner")
-        expected = GetDict(encoding, "expected")
-        ControlProcedure.__init__(
-            self,
-            cpId,
-            stream,
-            owner,
-            SystemMaintenanceState(
-                recentlyPatched=GetBool(expected, "RecentlyPatched"),
-                leastPrivilege=GetBool(expected, "LeastPrivilege")))

@@ -1,74 +1,102 @@
 # Payroll application for demo
 
-from controlprocedurepolicy import ReadPolicy, ReadActual
-from utils import DemoStream, LoadConfig
+from controlprocedurepolicy import ReportControlState, UpdatePolicy
+from utils import ControlStream, PolicyStream, LoadConfig
 import sys
 from applications import App
 from environments import Env
 from VerifierTrustworthinessPredicate import VerifierTrustworthiness as vt
 from predicates import Mode, Predicate
-from controlprocedures import ControlProcedure, ControlProcedureState
+from controlprocedures import ControlProcedure
 from controlobjectives import ControlObjective
-from controlobjectiveenums import ControlObjectiveDomain
+from controlobjectiveenums import ControlObjectiveDomain, VerifierControlObjectives
 import threading
-from appdeployment import AppControls
+from appdeployment import AppControls, AppPolicies
+from utils import trace
 
 def main(args):
     LoadConfig('payroll.config')
 
-    cpDict: dict[int, ControlProcedure]
     if (len(sys.argv) != 2):
         print("Usage: payrollapp DeploymentId e.g. payrollapp 1234")
         return
-    appStream=DemoStream(App.Payroll, sys.argv[1], Env.DEV)
 
-    # Create the control estate: CPs, Predicates, COs...
-    cpDict = ReadPolicy(appStream, "payroll.expected")
-    vtp = vt(appStream, Mode.Firmwide)
-    preds: list[Predicate] = []
-    preds.append(vtp)
-    co1 = ControlObjective(
+    # Application-global control estate
+    # Control procedures
+    cpDict: dict[int, ControlProcedure] = {}
+    # Predicates
+    predList: list[Predicate] = []
+    # Control objectives
+    coList: list[ControlObjective] = []
+
+    controlStream=ControlStream(app=App.Payroll, env=Env.DEV, depId=sys.argv[1])
+    policyStream=PolicyStream(env=Env.DEV, unittest=True)
+
+    # Set up the control estate
+
+    vtp = vt(controlStream, Mode.Firmwide)
+    predList.append(vtp)
+    CO_CCV_1 = ControlObjective(
         coDomain=ControlObjectiveDomain.ConfidentialComputingVerifier.value,
-        coId=1,
-        stream=appStream,
+        coId=VerifierControlObjectives.VerifierTrustworthiness.value,
+        stream=controlStream,
         predIds=[vtp.PredId()])
-    cos: list[ControlObjective] = []
-    cos.append(co1)
+    coList.append(CO_CCV_1)
 
-    print("--- Starting event processing loop ---")
+    print("--- Starting policy event handling ---")
 
     stop_event = threading.Event()
-    deployment = AppControls(
-        stream=appStream,
-        cps=cpDict,
-        preds=preds,
-        cos=cos,
+
+    appPolicies = AppPolicies(
+        policyStream=policyStream,
+        controlStream=controlStream,
+        cpDict=cpDict,
         stop=stop_event)
-    thread=threading.Thread(target=deployment.loop)
-    thread.start()
+    policiesThread=threading.Thread(target=appPolicies.loop)
+    policiesThread.start()
 
-    input("--- Press any key to assess existing control estate ---")
+    print("--- Starting control event handling ---")
 
-    actualDict = ReadActual(filename="payroll.actual")
-    for key in actualDict.keys():
-        cp: ControlProcedure = cpDict[key]
-        actualState: ControlProcedureState = actualDict[key]
-        cp.ReportControlProcedureState(actualState)
+    appControls = AppControls(
+        controlStream=controlStream,
+        preds=predList,
+        cos=coList,
+        stop=stop_event)
+    controlsThread=threading.Thread(target=appControls.loop)
+    controlsThread.start()
+
+    input(">>> Press Enter to roll out a control assessment policy >>>")
+
+    UpdatePolicy(policyStream, "payroll.expected")
+
+    print("--- Policy loaded and ready ---")
+
+    input(">>> Press Enter to assess existing control estate >>>")
+
+    ReportControlState("payroll.actual", cpDict)
 
     print("--- Existing control estate assessed ---")
-    input("--- Press any key to update control estate with fixes and re-assess ---")
 
-    fixedDict = ReadActual(filenae="payroll.fixed")
-    for key in fixedDict.keys():
-        cp: ControlProcedure = cpDict[key]
-        fixedState: ControlProcedureState = fixedDict[key]
-        cp.ReportControlProcedureState(fixedState)
+    input(">>> Press Enter to update control estate with fixes and re-assess >>>")
 
-    # input("Press any key to roll out a new policy and see the impact:")
+    ReportControlState("payroll.fixed", cpDict)
 
-    input("Press any key to stop event processing loop and exit:")
+    print("--- Fixed control estate assessed ---")
+
+    input(">>> Press Enter to roll out a new policy and see the impact >>>")
+
+    UpdatePolicy(policyStream, "payroll.newexpected")
+    ReportControlState("payroll.fixed", cpDict)
+
+    input(">>> Press Enter to fix remaining issues and re-assess >>>")
+
+    ReportControlState("payroll.newfixed", cpDict)
+
+    input(">>> Hit ^C to stop event handling and exit >>>")
+
     stop_event.set()
-    thread.join()
+    controlsThread.join()
+    policiesThread.join()
 
     return
 

@@ -109,11 +109,13 @@ class ControlProcedure:
         self.__stream = stream
         ValidateOwner(owner)
         self.__owner = owner
+        assert(isinstance(expectedState, ControlProcedureState))
         self.__expectedState = expectedState
 
     def UpdateExpectedState(self, newState: ControlProcedureState):
         if self.CpId() != newState.CpId():
             raise ValueError("cpId mismatch: " + self.CpId() + " vs " + newState.CpId())
+        assert(isinstance(newState, ControlProcedureState))
         self.__expectedState = newState
         
     def __AppendControlProcedureCompletionEvent(self, assessmentResult: ControlProcedureAssessmentResult):
@@ -131,6 +133,7 @@ class ControlProcedure:
             current_version=StreamState.ANY)
     
     def AssessControlProcedureState(self, assessedState: ControlProcedureState) -> ControlProcedureAssessmentResult:
+        assert(isinstance(self.__expectedState, ControlProcedureState))
         return self.__expectedState.Validate(assessedState)
     
     def ReportControlProcedureState(self, reportedState: ControlProcedureState):
@@ -138,3 +141,4 @@ class ControlProcedure:
 
     def Identifier(self) -> str:
         return ControlProcedureIdentifier(self.__cpId)
+

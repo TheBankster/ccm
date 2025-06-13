@@ -1,0 +1,2 @@
+{"cpId": 2, "actual": {"SecureBoot": "True", "AntiMalwareCheck": "Passed"}}
+{"cpId": 4, "actual": {"RecentlyPatched": "False", "LeastPrivilege": "True"}}

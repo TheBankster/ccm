@@ -1,0 +1,2 @@
+{"cpId": 2, "owner": "F648724", "expected": {"SecureBoot": "True", "AntiMalwareCheck": "Passed"}}
+{"cpId": 4, "owner": "V077496", "expected": {"RecentlyPatched": "False", "LeastPrivilege": "True"}}
