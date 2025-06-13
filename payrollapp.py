@@ -13,6 +13,7 @@ from controlobjectiveenums import ControlObjectiveDomain, VerifierControlObjecti
 import threading
 from appdeployment import AppControls, AppPolicies
 from utils import trace
+import time
 
 def main(args):
     LoadConfig('payroll.config')
@@ -65,33 +66,33 @@ def main(args):
     controlsThread=threading.Thread(target=appControls.loop)
     controlsThread.start()
 
+    time.sleep(2)
     input(">>> Press Enter to roll out a control assessment policy >>>")
-
     UpdatePolicy(policyStream, "payroll.expected")
 
+    time.sleep(2)
     print("--- Policy loaded and ready ---")
-
     input(">>> Press Enter to assess existing control estate >>>")
-
     ReportControlState("payroll.actual", cpDict)
 
+    time.sleep(2)
     print("--- Existing control estate assessed ---")
-
     input(">>> Press Enter to update control estate with fixes and re-assess >>>")
-
     ReportControlState("payroll.fixed", cpDict)
 
+    time.sleep(2)
     print("--- Fixed control estate assessed ---")
-
     input(">>> Press Enter to roll out a new policy and see the impact >>>")
-
     UpdatePolicy(policyStream, "payroll.newexpected")
+
+    time.sleep(2)
     ReportControlState("payroll.fixed", cpDict)
 
+    time.sleep(2)
     input(">>> Press Enter to fix remaining issues and re-assess >>>")
-
     ReportControlState("payroll.newfixed", cpDict)
 
+    time.sleep(2)
     input(">>> Hit ^C to stop event handling and exit >>>")
 
     stop_event.set()

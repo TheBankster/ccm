@@ -2,6 +2,7 @@ from __future__ import annotations # allows passing class objects to class membe
 from controlprocedures import ControlProcedure, ControlProcedureState
 from readconfig import GetIntInRange, GetNonEmptyString, GetDict, GetPositiveInt
 import json
+import trace
 
 ControlProcedureId = 3
 
@@ -13,9 +14,14 @@ class TEEIsolationState(ControlProcedureState):
             state={"CodeVersion": codeVersion, "ConfigurationHash": configurationHash})
 
     def Compare(self, actual: TEEIsolationState) -> bool:
-        return \
+        trace("CP3 BEING ASSESSED")
+        trace("Expected: " + json.dumps(self.state))
+        trace("Actual: " + json.dumps(actual.state))
+        result = \
             (self.state["CodeVersion"] <= actual.state["CodeVersion"]) and \
             (self.state["ConfigurationHash"] == actual.state["ConfigurationHash"])
+        trace("CP3 result: " + str(result))
+        return result
 
 class TEEIsolation(ControlProcedure):
     def __init__(self, stream: str, owner: str, expectedState: TEEIsolationState):

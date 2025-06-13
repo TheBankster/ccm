@@ -22,8 +22,13 @@ def GetIntInRange(d: dict, key: str, min: int, max: int) -> int:
     return i
 
 def GetBool(d: dict, key: str) -> bool:
-    b = bool(d[key])
-    assert(b == True or b == False)
+    s = d[key].upper()
+    if (s == "0" or s == "FALSE"):
+        b = False
+    elif (s == "1" or s == "TRUE"):
+        b = True
+    else:
+        assert(False)
     return b
 
 def GetDict(d: dict, key: str) -> dict:

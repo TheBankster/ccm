@@ -63,7 +63,7 @@ class AppControls():
         return
 
     def loop(self):
-        print("--- Started policy event handling ---")
+        print("--- Started control event handling ---")
         while not self.__stop.is_set():
             with client.subscribe_to_stream(stream_name=self.__controlStream) as sub:
                 for event in sub:
@@ -77,7 +77,7 @@ class AppControls():
                     else:
                         trace("Unrecognized event type: " + event.type)
                         assert(False)
-        print("--- Exited policy event handling ---")
+        print("--- Stopped control event handling ---")
         return
 
 class AppPolicies():
@@ -111,7 +111,7 @@ class AppPolicies():
         self.__cpDict[cpId] = ControlProcedureFromUpdateReport(self.__controlStream, report)
 
     def loop(self):
-        print("--- started policy change handling ---")
+        print("--- Started policy event handling ---")
         while not self.__stop.is_set():
             with client.subscribe_to_stream(stream_name=self.__policyStream) as sub:
                 for event in sub:
@@ -119,5 +119,5 @@ class AppPolicies():
                     if event.type == eventtypes.ControlProcedureUpdated:
                         report = ControlProcedureUpdateReport.fromJson(event.data)
                         self.HandleControlProcedureUpdatedEvent(report)
-        print("--- stopped policy change handling ---")
+        print("--- Stopped policy event handling ---")
         return

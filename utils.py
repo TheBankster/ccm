@@ -15,7 +15,7 @@ DefaultPort = "2113"
 KurrentHost: str = DefaultHost
 KurrentPort: int = DefaultPort
 
-Tracing: bool = True
+Tracing: bool = False
 
 def trace(str):
     if Tracing:

@@ -2,6 +2,7 @@ from __future__ import annotations # allows passing class objects to class membe
 from controlprocedures import ControlProcedure, ControlProcedureState
 from readconfig import GetIntInRange, GetNonEmptyString, GetDict, GetBool
 import json
+import trace
 
 ControlProcedureId = 4
 
@@ -13,9 +14,14 @@ class SystemMaintenanceState(ControlProcedureState):
             state={"RecentlyPatched": recentlyPatched, "LeastPrivilege": leastPrivilege})
 
     def Compare(self, actual: SystemMaintenanceState) -> bool:
-        return \
+        trace("CP4 BEING ASSESSED")
+        trace("Expected: " + json.dumps(self.state))
+        trace("Actual: " + json.dumps(actual.state))
+        result = \
             (not self.state["RecentlyPatched"] or actual.state["RecentlyPatched"]) and \
             (not self.state["LeastPrivilege"] or actual.state["LeastPrivilege"])
+        trace("CP4 result: " + str(result))
+        return result
 
 class SystemMaintenance(ControlProcedure):
     def __init__(self, stream: str, owner: str, expectedState: SystemMaintenanceState):
