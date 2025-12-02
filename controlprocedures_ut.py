@@ -1,8 +1,6 @@
 # ControlProcedures unit tests
 
 from __future__ import annotations # allows passing class objects to class member functions
-import json
-from typing import final
 from controlprocedures import ControlProcedureState
 from controlprocedures import ControlProcedureAssessmentReport as CPCR
 

@@ -1,8 +1,6 @@
 from __future__ import annotations # allows passing class objects to class member functions
 from controlprocedures import ControlProcedure, ControlProcedureState
 from readconfig import GetIntInRange, GetNonEmptyString, GetDict, GetPositiveInt
-import json
-import trace
 
 ControlProcedureId = 3
 

@@ -3,7 +3,6 @@
 #
 
 from __future__ import annotations # allows passing class objects to class member functions
-from enum import Enum
 from typing import final
 import json
 from assessmentindicator import AssessmentIndicator
