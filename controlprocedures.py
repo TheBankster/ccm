@@ -7,7 +7,7 @@ import re
 import json
 from typing import final
 from eventtypes import ControlProcedureAssessed
-from esdbclient import NewEvent, StreamState
+from kurrentdbclient import NewEvent, StreamState
 from utils import GlobalClient
 
 def ControlProcedureIdentifier(cpid: int) -> str:

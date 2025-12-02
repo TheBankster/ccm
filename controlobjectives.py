@@ -7,11 +7,11 @@ from enum import Enum
 from typing import final
 import json
 from assessmentindicator import AssessmentIndicator
-from esdbclient import NewEvent, StreamState
+from kurrentdbclient import NewEvent, StreamState
 from eventtypes import ControlObjectiveAssessed
 from controlobjectiveenums import ControlObjectveDomainNames
 from predicates import PredicateAssessmentReport
-from utils import GlobalClient, trace
+from utils import GlobalClient
 
 # Control Objective Event Creation
 

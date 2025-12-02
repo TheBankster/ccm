@@ -1,5 +1,5 @@
 import uuid
-from esdbclient import EventStoreDBClient
+from kurrentdbclient import KurrentDBClient
 from enum import Enum
 from applications import App
 from environments import Env
@@ -22,10 +22,10 @@ def trace(str):
         print(str)
 
 def KurrentUri(host: str = DefaultHost, port: int = DefaultPort):
-    return "esdb://" + host + ":" + str(port) + "?tls=false"
+    return "kurrentdb://" + host + ":" + str(port) + "?tls=false"
 
 def CcmClient(host = KurrentHost, port = KurrentPort):
-    return EventStoreDBClient(KurrentUri(host, port))
+    return KurrentDBClient(uri=KurrentUri(host, port))
 
 def DeploymentStream(app: App, env: Env, unittest: bool = False) -> str:
     if unittest:

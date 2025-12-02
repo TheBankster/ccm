@@ -10,7 +10,7 @@ import json
 from readconfig import GetPositiveInt, GetDict, GetNonEmptyString, GetBool, GetIntInRange
 from typing import Tuple, final
 from utils import trace, GlobalClient
-from esdbclient import NewEvent, StreamState
+from kurrentdbclient import NewEvent, StreamState
 from eventtypes import ControlProcedureUpdated
 
 class ControlProcedureUpdateReport:

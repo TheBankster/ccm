@@ -12,7 +12,6 @@ from controlobjectives import ControlObjective
 from controlobjectiveenums import ControlObjectiveDomain, VerifierControlObjectives
 import threading
 from appdeployment import AppControls, AppPolicies
-from utils import trace
 import time
 
 def main(args):

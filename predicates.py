@@ -4,7 +4,7 @@
 
 from __future__ import annotations # allows passing class objects to class member functions
 from assessmentindicator import AssessmentIndicator
-from esdbclient import NewEvent, StreamState
+from kurrentdbclient import NewEvent, StreamState
 from enum import Enum
 from controlprocedures import ControlProcedureAssessmentReport, ControlProcedureIdentifier
 from controlobjectiveenums import ControlObjectiveDomain, ControlObjectveDomainNames
